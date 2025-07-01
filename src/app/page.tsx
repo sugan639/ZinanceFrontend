@@ -1,27 +1,8 @@
-import Image from "next/image";
+'use client';
+
+// /src/app/page.tsx
+import { redirect } from 'next/navigation';
 
 export default function Home() {
-  return (
-     <div>
-      <h1>
-        Hii
-      </h1>
-     </div>
-  );
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
+  redirect('/login');
 }
