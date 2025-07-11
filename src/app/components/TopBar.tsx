@@ -2,29 +2,27 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
+
 import '@/app/css/topbar.css';
-import { LOGOUT_URL } from '@/lib/constants';
-import { useState } from 'react';
+
 
 export default function TopBar() {
-
   const router = useRouter();
-
-
-
 
   return (
     <header className="custom-topbar">
       <div className="custom-topbar-content">
         <div
           className="custom-topbar-logo"
-          style={{ marginRight: 'auto' }} // Ensures logo is at the leftmost end
-          onClick={() => router.push('/dashboard/admin')}
+          style={{ marginLeft: '1px', marginRight: 'auto', cursor: 'pointer' }} // Added marginLeft
+          onClick={() => router.push('/admin/dashboard')}
         >
-          Zinance
+          <img
+            src="/zinance_logo.png"
+            alt="Zinance Logo"
+            style={{ height: '150px', maxHeight: '150px', width: 'auto', display: 'block' }}
+          />
         </div>
-       
       </div>
     </header>
   );

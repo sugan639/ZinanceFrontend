@@ -28,11 +28,11 @@ export default function LoginPage() {
       const user = response.data;
 
       if (user.role === 'ADMIN') {
-        router.push('/dashboard/admin');
+        router.push('/admin/dashboard');
       } else if (user.role === 'EMPLOYEE') {
-        router.push('/dashboard/employee');
+        router.push('/employee/dashboard');
       } else if (user.role === 'CUSTOMER') {
-        router.push('/dashboard/customer');
+        router.push('/customer/dashboard');
       } else {
         throw new Error('Unknown user role');
       }

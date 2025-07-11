@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { ADMIN_PROFILE_URL } from '@/lib/constants';
 import TopBar from '@/app/components/TopBar';
 import Sidebar from '@/app/components/SideBar';
-import DashboardContent from '@/app/components/Dashboardcontent';
+import ContentArea from '@/app/components/ContentArea';
 
 import '@/app/css/sidebar.css';
 import ProfileDrawer from '@/app/components/ProfileDrawer';
@@ -64,7 +64,7 @@ export default function AdminDashboard() {
     <>
       <Sidebar />
       <TopBar />
-      <DashboardContent user={user} logoutError={logoutError} />
+      <ContentArea user={user} logoutError={logoutError} />
       <ProfileDrawer user={user} />
     </>
   );

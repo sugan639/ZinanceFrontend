@@ -5,7 +5,7 @@ interface DashboardContentProps {
   logoutError: string;
 }
 
-export default function DashboardContent({ user, logoutError }: DashboardContentProps) {
+export default function ContentArea({ user, logoutError }: DashboardContentProps) {
   return (
     <main className="dashboard-main">
       
