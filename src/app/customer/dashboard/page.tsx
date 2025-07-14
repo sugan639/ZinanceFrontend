@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import Loading from '@/app/employee/employeeComponents/Loading';
+import Loading from '@/app/Loading';
 
 import {
   EMP_BRANCH_SUMMARY_URL,
@@ -10,9 +10,9 @@ import {
   EMPLOYEE_PROFILE_URL,
 } from '@/lib/constants';
 
-import TopBar from '../employeeComponents/TopBar';
-import ProfileDrawer from '../employeeComponents/ProfileDrawer';
-import Sidebar from '../employeeComponents/SideBar';
+import TopBar from '../customerComponents/TopBar';
+import ProfileDrawer from '../customerComponents/ProfileDrawer';
+import Sidebar from '../customerComponents/SideBar';
 
 type Summary = { [key: string]: number };
 

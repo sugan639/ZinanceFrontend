@@ -33,26 +33,27 @@ export const getUserData = (userId: any ) =>
 
 
 // Employee constants
+
+
 export const EMPLOYEE_PROFILE_URL = 'http://localhost:8080/Banking_App/employee/profile';
-
-// /src/lib/constants.ts
 export const EMP_BRANCH_SUMMARY_URL = 'http://localhost:8080/Banking_App/employee/analytics/transaction-summary';
-
 export const EMP_TOP_CUSTOMERS_URL ='http://localhost:8080/Banking_App/employee/analytics/top-customers';
-export const EMPLOYEE_UPDATE_PROFILE_URL = 'http://localhost:8080/Banking_App/employee/users/update';
 
+export const EMPLOYEE_UPDATE_PROFILE_URL = 'http://localhost:8080/Banking_App/employee/profile/update';
 
+export const EMPLOYEE_DEPOSIT_URL = `http://localhost:8080/Banking_App/employee/transactions/deposit`;
+export const EMPLOYEE_WITHDRAW_URL = `http://localhost:8080/Banking_App/employee/transactions/withdraw`;
+export const EMPLOYEE_TRANSFER_URL = `http://localhost:8080/Banking_App/employee/transactions/transfer`;
 
+export const EMPLOYEE_FIND_TRANSACTIONS_URL = 'http://localhost:8080/Banking_App/employee/transactions/query';
 
+export const GET_USER__BY_EMPLOYEE = 'http://localhost:8080/Banking_App/employee/users?user_id=';
+export const NEW_CUSTOMER_BY_EMPLOYEE = 'http://localhost:8080/Banking_App/employee/new-customer';
+export const UPDATE_USER_BY_EMPLOYEE = 'http://localhost:8080/Banking_App/employee/users/update';
 
-
-
-
-
-
-
-
-
+export const GET_ACCOUNTS_BY_EMPLOYEE = 'http://localhost:8080/Banking_App/employee/account/get-accounts?customer_id=';
+export const UPDATE_ACCOUNT_STATUS_BY_EMPLOYEE = 'http://localhost:8080/Banking_App/employee/account/update';
+export const CREATE_NEW_ACCOUNT_BY_EMPLOYEE = 'http://localhost:8080/Banking_App/employee/new-account';
 
 
 

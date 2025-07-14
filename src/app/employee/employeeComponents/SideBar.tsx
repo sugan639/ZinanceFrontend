@@ -12,35 +12,31 @@ export default function Sidebar() {
       <nav>
         <ul>
           <li>
-            <Link href="/admin/dashboard">
+            <Link href="/employee/dashboard">
               <span className="icon">🏠</span> Home
             </Link>
           </li>
           <li>
-            <Link href="/admin/moneyTransfer">
+            <Link href="/employee/moneyTransfer">
               <span className="icon">🔁</span> Transfer
             </Link>
           </li>
           <li>
-            <Link href="/admin/transactions">
+            <Link href="/employee/transactions">
               <span className="icon">🔍</span> Transactions
             </Link>
           </li>
           <li>
-            <Link href="/admin/users">
+            <Link href="/employee/users">
               <span className="icon">👥</span> Users
             </Link>
           </li>
           <li>
-            <Link href="/admin/accounts">
+            <Link href="/employee/accounts">
               <span className="icon">💳 </span> Accounts
             </Link>
           </li>
-          <li>
-            <Link href="/admin/branch">
-              <span className="icon">🏦</span> Branch
-            </Link>
-          </li>
+          
         </ul>
       </nav>
     </aside>

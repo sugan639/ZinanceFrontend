@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import Loading from '@/app/employee/employeeComponents/Loading';
+import Loading from '@/app/Loading';
 
 import {
   EMP_BRANCH_SUMMARY_URL,
@@ -32,9 +32,7 @@ export default function EmployeeDashboard() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await axios.get(EMPLOYEE_PROFILE_URL, {
-          withCredentials: true,
-        });
+        const res = await axios.get(EMPLOYEE_PROFILE_URL, { withCredentials: true });
         setUser(res.data);
       } catch (err) {
         console.error('Profile fetch failed:', err);
@@ -45,30 +43,22 @@ export default function EmployeeDashboard() {
     })();
   }, []);
 
-  // 📊 Fetch summary and top customers (only if profile loaded)
+  // Fetch summary + top customers (after profile)
   useEffect(() => {
     if (!user) return;
 
-    const fetchData = async () => {
+    (async () => {
       try {
         const [summaryRes, topCustRes] = await Promise.all([
-          axios.get(`${EMP_BRANCH_SUMMARY_URL}?scope=today`, {
-            withCredentials: true,
-          }),
-          axios.get(`${EMP_TOP_CUSTOMERS_URL}?limit=5`, {
-            withCredentials: true,
-          }),
+          axios.get(`${EMP_BRANCH_SUMMARY_URL}?scope=today`, { withCredentials: true }),
+          axios.get(`${EMP_TOP_CUSTOMERS_URL}?limit=5`, { withCredentials: true }),
         ]);
         setSummary(summaryRes.data);
         setTopCustomers(topCustRes.data.topCustomers);
       } catch (err) {
         console.error('Dashboard data fetch failed:', err);
-        
       }
-    };
-
-
-    fetchData();
+    })();
   }, [user]);
 
   if (loading) return <Loading message="Loading dashboard..." />;
@@ -77,7 +67,7 @@ export default function EmployeeDashboard() {
   return (
     <>
       <Sidebar />
-      <TopBar user={user}/>
+      <TopBar user={user} />
       <ProfileDrawer user={user} />
 
       <main className="pl-64 pt-20 min-h-screen bg-gray-100 p-6">
@@ -107,28 +97,47 @@ export default function EmployeeDashboard() {
           {topCustomers.length === 0 ? (
             <p className="text-gray-500">No data</p>
           ) : (
-            <table className="min-w-full text-left">
-              <thead>
-                <tr>
-                  <th className="px-4 py-2 border-b">#</th>
-                  <th className="px-4 py-2 border-b">Name</th>
-                  <th className="px-4 py-2 border-b">Account</th>
-                  <th className="px-4 py-2 border-b">Balance (₹)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {topCustomers.map((c, idx) => (
-                  <tr key={c.accountNumber}>
-                    <td className="px-4 py-2 border-b">{idx + 1}</td>
-                    <td className="px-4 py-2 border-b">{c.name}</td>
-                    <td className="px-4 py-2 border-b">{c.accountNumber}</td>
-                    <td className="px-4 py-2 border-b">
-                      {c.balance.toLocaleString()}
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="min-w-full border-collapse border border-gray-400">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="px-4 py-3 border border-gray-400 text-sm font-semibold text-gray-800 text-left">
+                      #
+                    </th>
+                    <th className="px-4 py-3 border border-gray-400 text-sm font-semibold text-gray-800 text-left">
+                      Name
+                    </th>
+                    <th className="px-4 py-3 border border-gray-400 text-sm font-semibold text-gray-800 text-left">
+                      Account
+                    </th>
+                    <th className="px-4 py-3 border border-gray-400 text-sm font-semibold text-gray-800 text-left">
+                      Balance (₹)
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {topCustomers.map((c, idx) => (
+                    <tr
+                      key={c.accountNumber}
+                      className="hover:bg-gray-50 transition duration-150"
+                    >
+                      <td className="px-4 py-2 border border-gray-400 text-gray-800">
+                        {idx + 1}
+                      </td>
+                      <td className="px-4 py-2 border border-gray-400 text-gray-800">
+                        {c.name}
+                      </td>
+                      <td className="px-4 py-2 border border-gray-400 text-gray-800">
+                        {c.accountNumber}
+                      </td>
+                      <td className="px-4 py-2 border border-gray-400 text-gray-800">
+                        {c.balance.toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </section>
       </main>

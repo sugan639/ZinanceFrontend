@@ -25,7 +25,7 @@ export default function TopBar({ user }: Props) {
   const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
  
-  const [loading, setLoading] = useState(true);
+
 
 
   return (
@@ -43,6 +43,7 @@ export default function TopBar({ user }: Props) {
                 height: '150px',
                 width: 'auto',
                 display: 'block',
+                paddingLeft: '1px',
               }}
             />
           </div>
@@ -58,9 +59,8 @@ export default function TopBar({ user }: Props) {
         </div>
       </header>
 
-      {!loading && (
         <ProfileDrawer user={user} visible={drawerOpen} setVisible={setDrawerOpen} />
-      )}
+  
     </>
   );
 }

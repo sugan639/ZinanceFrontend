@@ -3,17 +3,18 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import Sidebar from '@/app/admin/components/SideBar';
-import TopBar from '@/app/admin/components/TopBar';
-import ProfileDrawer from '@/app/admin/components/ProfileDrawer';
+
 
 import {
-  ADMIN_PROFILE_URL,
-  CREATE_NEW_ACCOUNT_URL,
-  GET_ACCOUNTS_URL,
-  UPDATE_ACCOUNT_STATUS_URL,
+  EMPLOYEE_PROFILE_URL,
+    GET_ACCOUNTS_BY_EMPLOYEE,
+    UPDATE_ACCOUNT_STATUS_BY_EMPLOYEE,
+    CREATE_NEW_ACCOUNT_BY_EMPLOYEE,
 } from '@/lib/constants';
 import Loading from '@/app/admin/components/Loading';
+import Sidebar from '../employeeComponents/SideBar';
+import TopBar from '../employeeComponents/TopBar';
+import ProfileDrawer from '../employeeComponents/ProfileDrawer';
 
 export default function AccountManagement() {
   const router = useRouter();
@@ -33,7 +34,7 @@ export default function AccountManagement() {
 
   useEffect(() => {
     axios
-      .get(ADMIN_PROFILE_URL, { withCredentials: true })
+      .get(EMPLOYEE_PROFILE_URL, { withCredentials: true })
       .then((res) => setUser(res.data))
       .catch(() => (window.location.href = '/login'))
       .finally(() => setLoading(false));
@@ -43,7 +44,7 @@ export default function AccountManagement() {
     setError('');
     setMessage('');
     try {
-      const res = await axios.get(GET_ACCOUNTS_URL + customerId, { withCredentials: true });
+      const res = await axios.get(GET_ACCOUNTS_BY_EMPLOYEE + customerId, { withCredentials: true });
       const normalized = (res.data.accounts || []).map((acc: any) => ({
         account_number: acc.account_number || acc.accountNumber,
         balance: acc.balance,
@@ -57,7 +58,7 @@ export default function AccountManagement() {
     }
   };
 
-  const handleStatusChange = async (account_number: number, operation: 'ACTIVATE' | 'DEACTIVATE') => {
+  const handleStatusChange = async (account_number: number, operation: "ACTIVATE" | "INACTIVATE") => {
     setError('');
     setMessage('');
     try {
@@ -65,7 +66,7 @@ export default function AccountManagement() {
         account_number,
         operation,
       };
-      const res = await axios.post(UPDATE_ACCOUNT_STATUS_URL, payload, { withCredentials: true });
+      const res = await axios.post(UPDATE_ACCOUNT_STATUS_BY_EMPLOYEE, payload, { withCredentials: true });
       setMessage(res.data.message || 'Status updated');
       fetchAccounts(); // refresh
     } catch (err: any) {
@@ -83,7 +84,7 @@ export default function AccountManagement() {
         branch_id: Number(newAccountForm.branch_id),
         balance: Number(newAccountForm.balance),
       };
-      const res = await axios.post(CREATE_NEW_ACCOUNT_URL, payload, { withCredentials: true });
+      const res = await axios.post(CREATE_NEW_ACCOUNT_BY_EMPLOYEE, payload, { withCredentials: true });
       setMessage(res.data.message || 'New account created');
       setNewAccountForm({ user_id: '', branch_id: '', balance: '' });
     } catch (err: any) {
@@ -98,7 +99,7 @@ export default function AccountManagement() {
   return (
     <>
       <Sidebar />
-      <TopBar />
+      <TopBar user={user} />
       {user && <ProfileDrawer user={user} />}
 
       <main className="pl-64 pt-20 bg-gray-100 min-h-screen p-6 text-gray-900">
@@ -147,7 +148,7 @@ export default function AccountManagement() {
                                 day: 'numeric',
                                 hour: '2-digit',
                                 minute: '2-digit',
-                              })
+                                })
                             : 'N/A'}
 
                       </td>
@@ -159,7 +160,7 @@ export default function AccountManagement() {
                           Activate
                         </button>
                         <button
-                          onClick={() => handleStatusChange(acc.account_number, 'DEACTIVATE')}
+                          onClick={() => handleStatusChange(acc.account_number, 'INACTIVATE')}
                           className="bg-red-600 text-white px-2 py-1 rounded text-sm"
                         >
                           Deactivate
