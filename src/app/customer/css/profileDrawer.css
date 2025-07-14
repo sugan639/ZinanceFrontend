@@ -1,0 +1,21 @@
+/* /app/css/userProfile.css */
+.user-profile-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 260px;
+  background-color: white;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+  border-left: 1px solid #ddd;
+  transition: transform 0.3s ease-in-out;
+  z-index: 999;
+}
+
+.user-profile-panel.hidden {
+  transform: translateX(100%);
+}
+
+.user-profile-panel.visible {
+  transform: translateX(0%);
+}

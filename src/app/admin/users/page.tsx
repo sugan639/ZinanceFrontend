@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Sidebar from '@/app/components/SideBar';
-import TopBar from '@/app/components/TopBar';
-import ProfileDrawer from '@/app/components/ProfileDrawer';
+import Sidebar from '@/app/admin/components/SideBar';
+import TopBar from '@/app/admin/components/TopBar';
+import ProfileDrawer from '@/app/admin/components/ProfileDrawer';
 import axios from 'axios';
 import {
   ADMIN_PROFILE_URL,
@@ -12,7 +12,7 @@ import {
   NEW_EMPLOYEE_URL,
   UPDATE_USER_URL,
 } from '@/lib/constants';
-import Loading from '@/app/components/Loading';
+import Loading from '@/app/admin/components/Loading';
 
 export default function UserManagementPage() {
   const [tab, setTab] = useState<'createCustomer' | 'createEmployee' | 'getUser'>('createCustomer');
@@ -184,29 +184,42 @@ export default function UserManagementPage() {
             )}
 
             {tab === 'createEmployee' && (
-              <>
-                <h2 className="text-xl font-semibold text-blue-800">New Employee/Admin</h2>
-                {renderField('name', 'Full Name')}
-                {renderField('email', 'Email')}
-                {renderField('mobile_number', 'Mobile Number')}
-                {renderField('branch_id', 'Branch ID')}
-                <select
-                  value={form.role || ''}
-                  onChange={(e) => setForm({ ...form, role: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-500 rounded text-gray-900"
-                >
-                  <option value="">Select Role</option>
-                  <option value="EMPLOYEE">EMPLOYEE</option>
-                  <option value="ADMIN">ADMIN</option>
-                </select>
-                <button
-                  onClick={handleSubmit}
-                  className="w-full bg-blue-700 text-white py-2 rounded hover:bg-blue-800"
-                >
-                  Create Employee/Admin
-                </button>
-              </>
-            )}
+  <>
+          <h2 className="text-xl font-semibold text-blue-800">New Employee/Admin</h2>
+          {renderField('name', 'Full Name')}
+          {renderField('email', 'Email')}
+          {renderField('mobile_number', 'Mobile Number')}
+          {renderField('branch_id', 'Branch ID')}
+          <select
+            value={form.role || ''}
+            onChange={(e) => setForm({ ...form, role: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-500 rounded text-gray-900"
+          >
+            <option value="">Select Role</option>
+            <option value="EMPLOYEE">EMPLOYEE</option>
+            <option value="ADMIN">ADMIN</option>
+          </select>
+          <button
+            onClick={handleSubmit}
+            className="w-full bg-blue-700 text-white py-2 rounded hover:bg-blue-800"
+          >
+            Create Employee/Admin
+          </button>
+
+          {responseData?.employeeId && (
+            <div className="mt-4 p-4 border rounded bg-blue-100 text-blue-900 space-y-1">
+              <p><strong>Employee ID:</strong> {responseData.employeeId}</p>
+              <p><strong>Role:</strong> {responseData.role}</p>
+              <p><strong>Temporary Password:</strong> {responseData.initial_password}</p>
+              <p><strong>Name:</strong> {responseData.name}</p>
+              <p><strong>Email:</strong> {responseData.email}</p>
+              <p><strong>Mobile:</strong> {responseData.mobileNumber}</p>
+              <p><strong>Branch ID:</strong> {responseData.branchId}</p>
+            </div>
+          )}
+        </>
+      )}
+
 
             {tab === 'getUser' && (
               <>

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import '@/app/css/sidebar.css'; // Make sure this import exists
+import '@/app/admin/css/sidebar.css'; // Make sure this import exists
 
 export default function Sidebar() {
   return (

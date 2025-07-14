@@ -1,0 +1,46 @@
+.custom-topbar {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  height: 64px;
+  display: flex;
+  align-items: center;
+}
+
+.custom-topbar-content {
+  width: 100%;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+}
+
+.custom-topbar-logo {
+  color: #1e3a8a;
+  font-weight: 800;
+  font-size: 1.7rem;
+  cursor: pointer;
+  letter-spacing: 1px;
+  user-select: none;
+}
+
+.custom-topbar-logout {
+  padding: 8px 20px;
+  background: #dc2626;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.custom-topbar-logout:hover {
+  background: #b91c1c;
+}

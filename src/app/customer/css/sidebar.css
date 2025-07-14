@@ -1,0 +1,57 @@
+/* /app/css/sidebar.css */
+
+.sidebar {
+  width: 240px;
+  background-color: #ADD8E6; /* Light Blue */
+  color: #1e3a8a; /* Darker text for contrast */
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  padding: 1.5rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar .logo h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 2.5rem;
+  text-align: center;
+  color: #1e3a8a;
+  letter-spacing: 1px;
+}
+
+.sidebar nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar nav ul li {
+  margin-bottom: 1.2rem;
+}
+
+.sidebar nav ul li a {
+  color: #1e3a8a;
+  text-decoration: none;
+  font-size: 1.05rem;
+  display: flex;
+  align-items: center;
+  padding: 0.6rem 1rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.25s ease, transform 0.2s ease;
+}
+
+.sidebar nav ul li a:hover {
+  background-color: #3b82f6;
+  color: #ffffff;
+  transform: translateX(5px);
+}
+
+.sidebar nav ul li a span.icon {
+  margin-right: 0.75rem;
+  font-size: 1.25rem;
+}

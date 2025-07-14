@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { getUserData, LOGOUT_URL, UPDATE_PROFILE_URL } from '@/lib/constants';
-import { LogOut, Pencil } from 'lucide-react';
+import { EMPLOYEE_PROFILE_URL, LOGOUT_URL, EMPLOYEE_UPDATE_PROFILE_URL } from '@/lib/constants';
+import { LogOut, Pencil, X } from 'lucide-react';
 import axios from 'axios';
 
 type Props = {
@@ -14,15 +14,16 @@ type Props = {
     branchId: string;
     [key: string]: any;
   } | null;
+  visible?: boolean;
+  setVisible?: (val: boolean) => void;
 };
 
-export default function ProfileDrawer({ user }: Props) {
+export default function ProfileDrawer({ user, visible, setVisible }: Props) {
   const [isVisible, setIsVisible] = useState(false);
   const [logoutError, setLogoutError] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
 
-  // ✅ Guard: Wait until user is available
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -41,6 +42,12 @@ export default function ProfileDrawer({ user }: Props) {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (typeof visible === 'boolean') {
+      setIsVisible(visible);
+    }
+  }, [visible]);
+
   const handleLogout = async () => {
     try {
       const response = await axios.post(LOGOUT_URL, null, { withCredentials: true });
@@ -53,34 +60,7 @@ export default function ProfileDrawer({ user }: Props) {
       setLogoutError('Logout failed');
     }
   };
-
-  useEffect(() => {
-    if (isVisible && user) {
-      axios
-        .get(getUserData(user.employeeId), { withCredentials: true })
-        .then(res => console.log('User access recorded:', res.status))
-        .catch(err => console.error('Error recording drawer open:', err));
-    }
-  }, [isVisible, user]);
-
-  const DRAWER_WIDTH = 320;
-  const EDGE_THRESHOLD = 20;
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const cursorX = e.clientX;
-      const windowWidth = window.innerWidth;
-      const distanceFromRight = windowWidth - cursorX;
-      const drawerLeftEdge = windowWidth - DRAWER_WIDTH;
-
-      if (distanceFromRight <= EDGE_THRESHOLD) setIsVisible(true);
-      else if (cursorX < drawerLeftEdge) setIsVisible(false);
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
-
+//u
   const getInitials = (name: string) =>
     name
       .split(' ')
@@ -96,7 +76,7 @@ export default function ProfileDrawer({ user }: Props) {
     if (!user) return;
     try {
       await axios.post(
-        UPDATE_PROFILE_URL,
+        EMPLOYEE_UPDATE_PROFILE_URL,
         {
           user_id: user.employeeId,
           name: formData.name,
@@ -111,7 +91,6 @@ export default function ProfileDrawer({ user }: Props) {
     }
   };
 
-  // ⛔ Don't render if user is null
   if (!user) return null;
 
   return (
@@ -121,7 +100,16 @@ export default function ProfileDrawer({ user }: Props) {
         isVisible ? 'translate-x-0' : 'translate-x-full'
       }`}
     >
-      <div className="p-6 h-full flex flex-col justify-between">
+      <div className="p-6 h-full flex flex-col justify-between relative">
+        {/* ❌ Close Button */}
+        <button
+          onClick={() => setVisible?.(false)}
+          className="absolute top-4 right-4 text-gray-500 hover:text-red-600 transition"
+          title="Close"
+        >
+          <X className="w-6 h-6" />
+        </button>
+
         <div>
           <div className="flex items-center justify-center mb-6">
             <div className="relative h-20 w-20">
@@ -188,15 +176,7 @@ export default function ProfileDrawer({ user }: Props) {
 
             <p>
               <span className="font-medium text-gray-600">Branch ID:</span>{' '}
-              {isEditing ? (
-                <input
-                  className="border rounded p-1 w-full"
-                  value={formData.branchId}
-                  onChange={e => handleInputChange('branchId', Number(e.target.value))}
-                />
-              ) : (
-                formData.branchId
-              )}
+              {formData.branchId}
             </p>
           </div>
 
@@ -227,13 +207,13 @@ export default function ProfileDrawer({ user }: Props) {
         </div>
 
         <div>
-          <button
-            onClick={handleLogout}
-            className="mt-8 w-full flex items-center justify-center gap-2 px-5 py-3 bg-gray-100 text-gray-800 text-base font-medium rounded-xl hover:bg-red-100 hover:text-red-700 transition-all duration-200 cursor-pointer"
-          >
-            <LogOut className="w-5 h-5" />
-            Sign out
-          </button>
+         <button
+  onClick={handleLogout}
+  className="mt-8 w-full flex items-center justify-center gap-2 px-5 py-3 bg-red-100 text-red-700 text-base font-medium rounded-xl hover:bg-red-200 hover:text-red-800 transition-all duration-200 cursor-pointer"
+>
+  <LogOut className="w-5 h-5" />
+  Sign out
+</button>
 
           {logoutError && (
             <p className="text-red-500 text-sm mt-2 text-center">{logoutError}</p>

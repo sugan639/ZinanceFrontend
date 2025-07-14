@@ -1,8 +1,8 @@
 import './globals.css';
 import type { Metadata } from 'next';
 
-import './css/sidebar.css';
-import './css/admindashboard.css';
+import './admin/css/sidebar.css';
+import './admin/css/admindashboard.css';
 
 export const metadata: Metadata = {
   title: 'Zinance Bank',

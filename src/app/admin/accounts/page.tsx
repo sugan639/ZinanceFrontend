@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import Sidebar from '@/app/components/SideBar';
-import TopBar from '@/app/components/TopBar';
-import ProfileDrawer from '@/app/components/ProfileDrawer';
+import Sidebar from '@/app/admin/components/SideBar';
+import TopBar from '@/app/admin/components/TopBar';
+import ProfileDrawer from '@/app/admin/components/ProfileDrawer';
 
 import {
   ADMIN_PROFILE_URL,
@@ -13,7 +13,7 @@ import {
   GET_ACCOUNTS_URL,
   UPDATE_ACCOUNT_STATUS_URL,
 } from '@/lib/constants';
-import Loading from '@/app/components/Loading';
+import Loading from '@/app/admin/components/Loading';
 
 export default function AccountManagement() {
   const router = useRouter();

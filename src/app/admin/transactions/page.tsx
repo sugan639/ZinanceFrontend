@@ -1,13 +1,13 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import Sidebar from '@/app/components/SideBar';
-import TopBar from '@/app/components/TopBar';
-import ProfileDrawer from '@/app/components/ProfileDrawer';
+import Sidebar from '@/app/admin/components/SideBar';
+import TopBar from '@/app/admin/components/TopBar';
+import ProfileDrawer from '@/app/admin/components/ProfileDrawer';
 import axios from 'axios';
 import { ADMIN_PROFILE_URL, FIND_TRANSACTIONS_URL } from '@/lib/constants';
-import TransactionSearchForm from '@/app/components/TransactionSearchForm';
-import ErrorMessage from '@/app/components/ErrorMessage';
-import Loading from '@/app/components/Loading';
+import TransactionSearchForm from '@/app/admin/components/TransactionSearchForm';
+import ErrorMessage from '@/app/admin/components/ErrorMessage';
+import Loading from '../components/Loading';
 
 export default function FindTransactionsPage() {
   const [user, setUser] = useState<any>(null);

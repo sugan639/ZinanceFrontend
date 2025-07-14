@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import Sidebar from '@/app/components/SideBar';
-import TopBar from '@/app/components/TopBar';
-import ProfileDrawer from '@/app/components/ProfileDrawer';
+import Sidebar from '@/app/admin/components/SideBar';
+import TopBar from '@/app/admin/components/TopBar';
 import axios from 'axios';
 import {
   ADMIN_PROFILE_URL,
@@ -11,8 +10,8 @@ import {
   WITHDRAW_URL,
   TRANSFER_URL,
 } from '@/lib/constants';
-import TransactionForm from '@/app/components/TransactionForm';
-import Loading from '@/app/components/Loading';
+import TransactionForm from '@/app/admin/components/TransactionForm';
+import Loading from '@/app/admin/components/Loading';
 
 export default function MoneyTransferPage() {
   const [activeTab, setActiveTab] = useState<'DEPOSIT' | 'WITHDRAW' | 'TRANSFER'>('DEPOSIT');
@@ -108,7 +107,8 @@ export default function MoneyTransferPage() {
     <>
       <Sidebar />
       <TopBar />
-      <ProfileDrawer user={user} />
+      
+      
 
       <main className="pl-64 pt-20 min-h-screen bg-gray-100">
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] px-4">
@@ -157,3 +157,4 @@ export default function MoneyTransferPage() {
     </>
   );
 }
+
