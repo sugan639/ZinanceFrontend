@@ -32,8 +32,13 @@ export default function Sidebar() {
             </Link>
           </li>
           <li>
-            <Link href="#">
-              <span className="icon">🏦</span> Accounts
+            <Link href="/admin/accounts">
+              <span className="icon">💳 </span> Accounts
+            </Link>
+          </li>
+          <li>
+            <Link href="/admin/branch">
+              <span className="icon">🏦</span> Branch
             </Link>
           </li>
         </ul>

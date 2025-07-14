@@ -24,6 +24,7 @@ export default function LoginPage() {
         },
         { withCredentials: true }
       );
+// Lets spin up the authentication service .
 
       const user = response.data;
 

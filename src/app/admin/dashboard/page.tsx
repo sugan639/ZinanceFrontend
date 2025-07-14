@@ -10,6 +10,7 @@ import ContentArea from '@/app/components/ContentArea';
 
 import '@/app/css/sidebar.css';
 import ProfileDrawer from '@/app/components/ProfileDrawer';
+import Loading from '@/app/components/Loading';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -44,14 +45,11 @@ export default function AdminDashboard() {
     fetchProfile();
   }, [router]);
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-100">
-        <p className="text-lg text-gray-600">Loading...</p>
-      </div>
-    );
-  }
 
+  // Page loading
+  if(loading){
+   return <Loading message="Loading user management..." />;
+  }
   if (error) {
     return <div>{error}</div>;
   }

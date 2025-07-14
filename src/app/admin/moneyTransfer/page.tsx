@@ -12,6 +12,7 @@ import {
   TRANSFER_URL,
 } from '@/lib/constants';
 import TransactionForm from '@/app/components/TransactionForm';
+import Loading from '@/app/components/Loading';
 
 export default function MoneyTransferPage() {
   const [activeTab, setActiveTab] = useState<'DEPOSIT' | 'WITHDRAW' | 'TRANSFER'>('DEPOSIT');
@@ -41,12 +42,10 @@ export default function MoneyTransferPage() {
     fetchProfile();
   }, []);
 
-     if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-100">
-        <p className="text-lg text-gray-600">Loading...</p>
-      </div>
-    );
+
+  // Page loading
+  if(loading){
+   return <Loading message="Loading user management..." />;
   }
 
   const handleSubmit = async () => {

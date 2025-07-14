@@ -12,6 +12,7 @@ import {
   NEW_EMPLOYEE_URL,
   UPDATE_USER_URL,
 } from '@/lib/constants';
+import Loading from '@/app/components/Loading';
 
 export default function UserManagementPage() {
   const [tab, setTab] = useState<'createCustomer' | 'createEmployee' | 'getUser'>('createCustomer');
@@ -21,6 +22,7 @@ export default function UserManagementPage() {
   const [editableData, setEditableData] = useState<any>({});
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(true);
 
   const resetForm = () => {
     setForm({});
@@ -34,14 +36,15 @@ export default function UserManagementPage() {
     axios
       .get(ADMIN_PROFILE_URL, { withCredentials: true })
       .then((res) => setUser(res.data))
-      .catch(() => (window.location.href = '/login'));
+      .catch(() => (window.location.href = '/login'))
+      .finally(() => setLoading(false));
   }, []);
 
   const handleSubmit = async () => {
     setError('');
     setMessage('');
     try {
-      const url = tab === 'createCustomer' ? NEW_CUSTOMER_URL : NEW_EMPLOYEE_URL;
+      let url = tab === 'createCustomer' ? NEW_CUSTOMER_URL : NEW_EMPLOYEE_URL;
       const res = await axios.post(url, form, { withCredentials: true });
       setMessage(res.data.message || 'User created successfully!');
       setResponseData(res.data);
@@ -55,26 +58,28 @@ export default function UserManagementPage() {
     setError('');
     setResponseData(null);
     if (!form.user_id) return setError('Please provide a user ID.');
+
     try {
       const res = await axios.get(GET_USER_URL + form.user_id, { withCredentials: true });
       setResponseData(res.data);
 
-      // ✅ Use snake_case keys for consistency
-      const editableKeys = [
-        'name',
-        'email',
-        'pan_number',
-        'mobile_number',
-        'dob',
-        'aadhar_number',
-        'address',
-      ];
+          const isEditable = [
+      'name',
+      'email',
+      'pan_number',
+      'mobile_number',
+      'dob',
+      'aadhar_number',
+      'address',
+    ];
+
       const initialEditState: any = {};
-      editableKeys.forEach((key) => {
+      isEditable.forEach((key) => {
         if (res.data[key] !== undefined) {
           initialEditState[key] = res.data[key];
         }
       });
+
       setEditableData(initialEditState);
     } catch (err: any) {
       setError(err?.response?.data?.error || 'Failed to fetch user.');
@@ -86,7 +91,9 @@ export default function UserManagementPage() {
       const payload = {
         ...editableData,
         user_id: form.user_id,
+   
       };
+
       const res = await axios.post(UPDATE_USER_URL, payload, { withCredentials: true });
       setMessage(res.data.message || 'User updated successfully!');
     } catch (err: any) {
@@ -103,6 +110,12 @@ export default function UserManagementPage() {
       className="w-full px-3 py-2 border border-gray-500 rounded text-gray-900"
     />
   );
+
+
+  // Page loading
+  if(loading){
+   return <Loading message="Loading user management..." />;
+  }
 
   return (
     <>
@@ -145,9 +158,10 @@ export default function UserManagementPage() {
                 <input
                   type="date"
                   value={form.dob ? new Date(form.dob).toISOString().split('T')[0] : ''}
-                  onChange={(e) =>
-                    setForm({ ...form, dob: new Date(e.target.value).getTime() })
-                  }
+                  onChange={(e) => {
+                    const dobMillis = new Date(e.target.value).getTime();
+                    setForm({ ...form, dob: dobMillis });
+                  }}
                   className="w-full px-3 py-2 border border-gray-500 rounded text-gray-900"
                 />
                 {renderField('address', 'Address')}
@@ -234,8 +248,8 @@ export default function UserManagementPage() {
 
                   return (
                     <div key={key}>
-                      <label className="font-medium block mb-1 capitalize">
-                        {key.replace(/_/g, ' ')}
+                      <label className="font-medium block mb-1">
+                        {key.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').replace(/\b\w/g, (l) => l.toUpperCase())}
                       </label>
                       {isEditable ? (
                         isDate ? (
@@ -255,13 +269,20 @@ export default function UserManagementPage() {
                             }
                           />
                         ) : (
-                          <input
-                            className="border px-2 py-1 rounded w-full text-gray-900 border-gray-500"
-                            value={editableData[key] || ''}
-                            onChange={(e) =>
-                              setEditableData({ ...editableData, [key]: e.target.value })
-                            }
-                          />
+                            <input
+                          type={['mobile_number', 'aadhar_number'].includes(key) ? 'number' : 'text'}
+                          className="border px-2 py-1 rounded w-full text-gray-900 border-gray-500"
+                          value={editableData[key]?.toString() || ''}
+                          onChange={(e) =>
+                            setEditableData({
+                              ...editableData,
+                              [key]: ['mobile_number', 'aadhar_number'].includes(key)
+                                ? Number(e.target.value)
+                                : e.target.value,
+                            })
+                          }
+                        />
+
                         )
                       ) : (
                         <input

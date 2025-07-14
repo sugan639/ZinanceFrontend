@@ -17,6 +17,9 @@ export const NEW_EMPLOYEE_URL = 'http://localhost:8080/Banking_App/admin/new-emp
 export const GET_USER_URL = 'http://localhost:8080/Banking_App/admin/users?user_id=';
 
 
+export const GET_ACCOUNTS_URL = 'http://localhost:8080/Banking_App/admin/account/get-accounts?customer_id=';
+export const UPDATE_ACCOUNT_STATUS_URL = 'http://localhost:8080/Banking_App/admin/account/update';
+export const CREATE_NEW_ACCOUNT_URL = 'http://localhost:8080/Banking_App/admin/customer/new-account';
 
 // You can add other endpoints similarly:
 // export const REGISTER_URL = `${API_BASE_URL}/auth/register`;
