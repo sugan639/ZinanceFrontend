@@ -11,10 +11,10 @@ import {
     UPDATE_ACCOUNT_STATUS_BY_EMPLOYEE,
     CREATE_NEW_ACCOUNT_BY_EMPLOYEE,
 } from '@/lib/constants';
-import Loading from '@/app/admin/components/Loading';
 import Sidebar from '../employeeComponents/SideBar';
 import TopBar from '../employeeComponents/TopBar';
 import ProfileDrawer from '../employeeComponents/ProfileDrawer';
+import Loading from '@/app/Loading';
 
 export default function AccountManagement() {
   const router = useRouter();

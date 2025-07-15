@@ -56,6 +56,17 @@ export const UPDATE_ACCOUNT_STATUS_BY_EMPLOYEE = 'http://localhost:8080/Banking_
 export const CREATE_NEW_ACCOUNT_BY_EMPLOYEE = 'http://localhost:8080/Banking_App/employee/new-account';
 
 
+// Customers endpoints
+
+// 📄 Customer Endpoints
+export const CUSTOMER_PROFILE_URL          = 'http://localhost:8080/Banking_App/customer/profile';
+export const CUSTOMER_UPDATE_PROFILE_URL   = 'http://localhost:8080/Banking_App/customer/profile/update';
+export const CUSTOMER_ACCOUNTS_URL         = 'http://localhost:8080/Banking_App/customer/accounts';
+export const CUSTOMER_TRANSACTIONS_URL     = 'http://localhost:8080/Banking_App/customer/transactions';
+export const CUSTOMER_TRANSFER_URL         = 'http://localhost:8080/Banking_App/customer/transfer';
+export const CUSTOMER_ADD_BENEFICIARY_URL  = 'http://localhost:8080/Banking_App/customer/beneficiaries/add';
+export const CUSTOMER_GET_BENEFICIARIES_URL= 'http://localhost:8080/Banking_App/customer/beneficiaries/get';
+
 
 
 

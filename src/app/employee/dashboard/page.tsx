@@ -50,7 +50,7 @@ export default function EmployeeDashboard() {
     (async () => {
       try {
         const [summaryRes, topCustRes] = await Promise.all([
-          axios.get(`${EMP_BRANCH_SUMMARY_URL}?scope=today`, { withCredentials: true }),
+          axios.get(`${EMP_BRANCH_SUMMARY_URL}?scope=month`, { withCredentials: true }),
           axios.get(`${EMP_TOP_CUSTOMERS_URL}?limit=5`, { withCredentials: true }),
         ]);
         setSummary(summaryRes.data);

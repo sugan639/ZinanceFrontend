@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { EMPLOYEE_PROFILE_URL } from '@/lib/constants';
+import { CUSTOMER_PROFILE_URL } from '@/lib/constants';
 import axios from 'axios';
 import '@/app/employee/css/topbar.css';
 import UserAvatar from './UserAvatar';
@@ -34,7 +34,7 @@ export default function TopBar({ user }: Props) {
         <div className="custom-topbar-content flex items-center justify-between px-4">
           <div
             className="custom-topbar-logo cursor-pointer"
-            onClick={() => router.push('/admin/dashboard')}
+            onClick={() => router.push('/employee/dashboard')}
           >
             <img
               src="/zinance_logo.png"

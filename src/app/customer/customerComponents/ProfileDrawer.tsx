@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { EMPLOYEE_PROFILE_URL, LOGOUT_URL, EMPLOYEE_UPDATE_PROFILE_URL } from '@/lib/constants';
+import { CUSTOMER_UPDATE_PROFILE_URL, LOGOUT_URL } from '@/lib/constants';
 import { LogOut, Pencil, X } from 'lucide-react';
 import axios from 'axios';
 
@@ -9,9 +9,12 @@ type Props = {
   user?: {
     name: string;
     email: string;
-    employeeId: string;
+    customerId: string;
     mobileNumber: string;
-    branchId: string;
+    address: string;
+    dob: string;
+    panNumber: string;
+    aadharNumber: string;
     [key: string]: any;
   } | null;
   visible?: boolean;
@@ -28,8 +31,26 @@ export default function ProfileDrawer({ user, visible, setVisible }: Props) {
     name: '',
     email: '',
     mobileNumber: '',
-    branchId: '',
+    address: '',
+    dob: '', // in DD-MM-YYYY format
   });
+
+  // Convert epoch millis to DD-MM-YYYY
+  const convertToDisplayDate = (millis: string) => {
+    const date = new Date(Number(millis));
+    if (isNaN(date.getTime())) return '';
+    const dd = String(date.getDate()).padStart(2, '0');
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const yyyy = date.getFullYear();
+    return `${dd}-${mm}-${yyyy}`;
+  };
+
+  // Convert DD-MM-YYYY to epoch millis
+  const convertToEpochMillis = (ddmmyyyy: string) => {
+    const [dd, mm, yyyy] = ddmmyyyy.split('-');
+    const date = new Date(`${yyyy}-${mm}-${dd}`);
+    return date.getTime();
+  };
 
   useEffect(() => {
     if (user) {
@@ -37,7 +58,8 @@ export default function ProfileDrawer({ user, visible, setVisible }: Props) {
         name: user.name,
         email: user.email,
         mobileNumber: user.mobileNumber,
-        branchId: user.branchId,
+        address: user.address,
+        dob: convertToDisplayDate(user.dob),
       });
     }
   }, [user]);
@@ -50,8 +72,8 @@ export default function ProfileDrawer({ user, visible, setVisible }: Props) {
 
   const handleLogout = async () => {
     try {
-      const response = await axios.post(LOGOUT_URL, null, { withCredentials: true });
-      if (response.status === 200) {
+      const res = await axios.post(LOGOUT_URL, null, { withCredentials: true });
+      if (res.status === 200) {
         window.location.href = '/login';
       } else {
         setLogoutError('Logout failed');
@@ -60,7 +82,7 @@ export default function ProfileDrawer({ user, visible, setVisible }: Props) {
       setLogoutError('Logout failed');
     }
   };
-//u
+
   const getInitials = (name: string) =>
     name
       .split(' ')
@@ -74,17 +96,26 @@ export default function ProfileDrawer({ user, visible, setVisible }: Props) {
 
   const handleSave = async () => {
     if (!user) return;
+
+    const payload: any = { user_id: user.customerId };
+
+    if (formData.name !== user.name) payload.name = formData.name;
+    if (formData.email !== user.email) payload.email = formData.email;
+    if (formData.mobileNumber !== user.mobileNumber)
+      payload.mobile_number = formData.mobileNumber;
+    if (formData.address !== user.address) payload.address = formData.address;
+
+    if (formData.dob && /^\d{2}-\d{2}-\d{4}$/.test(formData.dob)) {
+      const millis = convertToEpochMillis(formData.dob);
+      if (!isNaN(millis)) {
+        payload.dob = millis;
+      }
+    }
+
     try {
-      await axios.post(
-        EMPLOYEE_UPDATE_PROFILE_URL,
-        {
-          user_id: user.employeeId,
-          name: formData.name,
-          email: formData.email,
-          mobile_number: formData.mobileNumber,
-        },
-        { withCredentials: true }
-      );
+      await axios.put(CUSTOMER_UPDATE_PROFILE_URL, payload, {
+        withCredentials: true,
+      });
       setIsEditing(false);
     } catch {
       alert('Failed to update profile');
@@ -111,6 +142,7 @@ export default function ProfileDrawer({ user, visible, setVisible }: Props) {
         </button>
 
         <div>
+          {/* Avatar */}
           <div className="flex items-center justify-center mb-6">
             <div className="relative h-20 w-20">
               <div className="h-full w-full rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 p-1 shadow-lg">
@@ -121,6 +153,7 @@ export default function ProfileDrawer({ user, visible, setVisible }: Props) {
             </div>
           </div>
 
+          {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-blue-900">Welcome, {user.name}</h2>
             {!isEditing && (
@@ -130,19 +163,17 @@ export default function ProfileDrawer({ user, visible, setVisible }: Props) {
             )}
           </div>
 
+          {/* Info Fields */}
           <div className="space-y-3 text-gray-800 text-sm px-2">
             <p>
-              <span className="font-medium text-gray-600">Employee ID:</span> {user.employeeId}
+              <span className="font-medium text-gray-600">Customer ID:</span> {user.customerId}
             </p>
 
             <p>
               <span className="font-medium text-gray-600">Name:</span>{' '}
               {isEditing ? (
-                <input
-                  className="border rounded p-1 w-full"
-                  value={formData.name}
-                  onChange={e => handleInputChange('name', e.target.value)}
-                />
+                <input className="border rounded p-1 w-full" value={formData.name}
+                  onChange={e => handleInputChange('name', e.target.value)} />
               ) : (
                 formData.name
               )}
@@ -151,11 +182,8 @@ export default function ProfileDrawer({ user, visible, setVisible }: Props) {
             <p>
               <span className="font-medium text-gray-600">Email:</span>{' '}
               {isEditing ? (
-                <input
-                  className="border rounded p-1 w-full"
-                  value={formData.email}
-                  onChange={e => handleInputChange('email', e.target.value)}
-                />
+                <input className="border rounded p-1 w-full" value={formData.email}
+                  onChange={e => handleInputChange('email', e.target.value)} />
               ) : (
                 formData.email
               )}
@@ -164,22 +192,67 @@ export default function ProfileDrawer({ user, visible, setVisible }: Props) {
             <p>
               <span className="font-medium text-gray-600">Mobile:</span>{' '}
               {isEditing ? (
-                <input
-                  className="border rounded p-1 w-full"
-                  value={formData.mobileNumber}
-                  onChange={e => handleInputChange('mobileNumber', Number(e.target.value))}
-                />
+                <input className="border rounded p-1 w-full" value={formData.mobileNumber}
+                  onChange={e => handleInputChange('mobileNumber', Number(e.target.value))} />
               ) : (
                 formData.mobileNumber
               )}
             </p>
 
+<div>
+  <span className="font-medium text-gray-600">DOB:</span>{' '}
+  {isEditing ? (
+    <>
+      <input
+        type="date"
+        className="border rounded p-1 w-full"
+        value={
+          (() => {
+            const parts = formData.dob.split('-');
+            if (parts.length === 3) {
+              const [dd, mm, yyyy] = parts;
+              return `${yyyy}-${mm}-${dd}`;
+            }
+            return '';
+          })()
+        }
+        onChange={e => {
+          const iso = e.target.value; // yyyy-mm-dd
+          if (iso) {
+            const [yyyy, mm, dd] = iso.split('-');
+            handleInputChange('dob', `${dd}-${mm}-${yyyy}`);
+              }
+            }}
+          />
+          <p className="text-xs text-gray-500 mt-1">Format: DD-MM-YYYY</p>
+        </>
+      ) : (
+        formData.dob
+      )}
+    </div>
+
+
+
             <p>
-              <span className="font-medium text-gray-600">Branch ID:</span>{' '}
-              {formData.branchId}
+              <span className="font-medium text-gray-600">Address:</span>{' '}
+              {isEditing ? (
+                <input className="border rounded p-1 w-full" value={formData.address}
+                  onChange={e => handleInputChange('address', e.target.value)} />
+              ) : (
+                formData.address
+              )}
+            </p>
+
+            <p>
+              <span className="font-medium text-gray-600">Aadhar Number:</span> {user.aadharNumber}
+            </p>
+
+            <p>
+              <span className="font-medium text-gray-600">PAN Number:</span> {user.panNumber}
             </p>
           </div>
 
+          {/* Save / Cancel */}
           {isEditing && (
             <div className="mt-4 flex justify-between">
               <button
@@ -195,7 +268,8 @@ export default function ProfileDrawer({ user, visible, setVisible }: Props) {
                     name: user.name,
                     email: user.email,
                     mobileNumber: user.mobileNumber,
-                    branchId: user.branchId,
+                    address: user.address,
+                    dob: convertToDisplayDate(user.dob),
                   });
                 }}
                 className="bg-gray-200 text-gray-800 py-2 px-4 rounded hover:bg-gray-300 transition"
@@ -206,14 +280,15 @@ export default function ProfileDrawer({ user, visible, setVisible }: Props) {
           )}
         </div>
 
+        {/* Logout */}
         <div>
-         <button
-  onClick={handleLogout}
-  className="mt-8 w-full flex items-center justify-center gap-2 px-5 py-3 bg-red-100 text-red-700 text-base font-medium rounded-xl hover:bg-red-200 hover:text-red-800 transition-all duration-200 cursor-pointer"
->
-  <LogOut className="w-5 h-5" />
-  Sign out
-</button>
+          <button
+            onClick={handleLogout}
+            className="mt-8 w-full flex items-center justify-center gap-2 px-5 py-3 bg-red-100 text-red-700 text-base font-medium rounded-xl hover:bg-red-200 hover:text-red-800 transition-all duration-200 cursor-pointer"
+          >
+            <LogOut className="w-5 h-5" />
+            Sign out
+          </button>
 
           {logoutError && (
             <p className="text-red-500 text-sm mt-2 text-center">{logoutError}</p>
