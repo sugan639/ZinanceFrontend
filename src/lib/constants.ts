@@ -66,8 +66,6 @@ export const CUSTOMER_TRANSACTIONS_URL     = 'http://localhost:8080/Banking_App/
 export const CUSTOMER_TRANSFER_URL         = 'http://localhost:8080/Banking_App/customer/transfer';
 export const CUSTOMER_ADD_BENEFICIARY_URL  = 'http://localhost:8080/Banking_App/customer/beneficiaries/add';
 export const CUSTOMER_GET_BENEFICIARIES_URL= 'http://localhost:8080/Banking_App/customer/beneficiaries/get';
-
-
-
+export const CUSTOMER_DASHBOARD_SUMMARY    = 'http://localhost:8080/Banking_App/customer/analytics/dashboard-summary';
 
 

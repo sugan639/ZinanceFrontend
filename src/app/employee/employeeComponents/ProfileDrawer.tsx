@@ -100,7 +100,7 @@ export default function ProfileDrawer({ user, visible, setVisible }: Props) {
         isVisible ? 'translate-x-0' : 'translate-x-full'
       }`}
     >
-      <div className="p-6 h-full flex flex-col justify-between relative">
+      <div className="p-6 flex flex-col justify-between relative">
         {/* ❌ Close Button */}
         <button
           onClick={() => setVisible?.(false)}

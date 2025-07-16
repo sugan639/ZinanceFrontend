@@ -1,7 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import '@/app/employee/css/sidebar.css'; // Make sure this import exists
+
+
+import '@/app/customer/css/sidebar.css'; // Ensure styles are defined
+
+// MUI Icons
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import SearchIcon from '@mui/icons-material/Search';
+import CreditCardIcon from '@mui/icons-material/CreditCard';
 
 export default function Sidebar() {
   return (
@@ -12,26 +20,29 @@ export default function Sidebar() {
       <nav>
         <ul>
           <li>
-            <Link href="/customer/dashboard">
-              <span className="icon">🏠</span> Home
+            <Link href="/customer/dashboard" className="nav-link gap-2">
+              <DashboardIcon className="icon" />
+              <span>Dashboard</span>
             </Link>
           </li>
           <li>
-            <Link href="/customer/moneyTransfer">
-              <span className="icon">🔁</span> Transfer Money
+            <Link href="/customer/moneyTransfer" className="nav-link gap-2">
+              <SwapHorizIcon className="icon" />
+              <span>Transfer Money</span>
             </Link>
           </li>
           <li>
-            <Link href="/customer/transactions">
-              <span className="icon">🔍</span> Find Transactions
+            <Link href="/customer/transactions" className="nav-link gap-2">
+              <SearchIcon className="icon" />
+              <span>Find Transactions</span>
             </Link>
           </li>
           <li>
-            <Link href="/customer/accounts">
-              <span className="icon">💳 </span> Accounts
+            <Link href="/customer/accounts" className="nav-link gap-2">
+              <CreditCardIcon className="icon" />
+              <span>Accounts</span>
             </Link>
           </li>
-        
         </ul>
       </nav>
     </aside>

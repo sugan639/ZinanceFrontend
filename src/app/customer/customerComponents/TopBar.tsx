@@ -49,7 +49,7 @@ export default function TopBar({ user }: Props) {
 
           {/* Profile icon on right */}
           <button
-            className="text-gray-700 hover:text-blue-700"
+            className="cursor-pointer text-gray-700 hover:text-blue-700"
             onClick={() => setDrawerOpen(true)}
             title="Profile"
           >

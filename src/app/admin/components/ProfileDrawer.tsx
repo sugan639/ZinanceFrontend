@@ -109,7 +109,7 @@ export default function ProfileDrawer({ user, visible, setVisible }: Props) {
         isVisible ? 'translate-x-0' : 'translate-x-full'
       }`}
     >
-      <div className="p-6 h-full flex flex-col justify-between relative">
+      <div className="p-6 flex flex-col justify-between relative">
         {/* ❌ Close Button */}
         <button
           onClick={() => setVisible?.(false)}
@@ -215,10 +215,10 @@ export default function ProfileDrawer({ user, visible, setVisible }: Props) {
           )}
         </div>
 
-        <div>
+        <div className='flex flex-col items-center'>
          <button
   onClick={handleLogout}
-  className="mt-8 w-full flex items-center justify-center gap-2 px-5 py-3 bg-red-100 text-red-700 text-base font-medium rounded-xl hover:bg-red-200 hover:text-red-800 transition-all duration-200 cursor-pointer"
+  className="mt-8 flex items-center  gap-2 px-5 py-3 text-red-500 text-base font-medium rounded-xl  hover:text-red-800 transition-all duration-200 cursor-pointer"
 >
   <LogOut className="w-5 h-5" />
   Sign out

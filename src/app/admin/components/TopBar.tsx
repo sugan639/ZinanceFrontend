@@ -46,7 +46,7 @@ export default function TopBar() {
 
           {/* Profile icon on right */}
           <button
-            className="text-gray-700 hover:text-blue-700"
+            className="text-gray-700 hover:text-blue-700 cursor-pointer"
             onClick={() => setDrawerOpen(true)}
             title="Profile"
           >
