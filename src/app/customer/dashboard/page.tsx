@@ -26,6 +26,7 @@ export default function CustomerDashboard() {
       setSummary(summaryRes.data);
     } catch (err) {
       console.error('Dashboard fetch failed:', err);
+      window.location.href = '/login';
     } finally {
       setLoading(false);
     }

@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import DownloadIcon from '@mui/icons-material/Download';
 import {
+  CUSTOMER_ACCOUNTS_URL,
   CUSTOMER_PROFILE_URL,
   CUSTOMER_TRANSFER_URL,
 } from '@/lib/constants';
@@ -83,6 +84,18 @@ export default function MoneyTransferPage() {
     }
   };
 
+  const getAccounts = async () => {
+    try {
+      const accounts = await axios.get(CUSTOMER_ACCOUNTS_URL,{withCredentials: true});
+
+      
+
+      // Handle the accounts data as needed
+    } catch (error) {
+      console.error('Error fetching accounts:', error);
+    }
+  }
+
   const handleDownloadReceipt = async () => {
     if (!receiptData) return;
 
@@ -136,6 +149,10 @@ export default function MoneyTransferPage() {
     pdf.save(`Transaction_Receipt_${Date.now()}.pdf`);
   };
 
+  const handleCloseReceipt = () => {
+    setReceiptData(null);
+  };
+
   if (loading) return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-gray-100">
       <Loading message="Loading your profile..." />
@@ -175,7 +192,7 @@ export default function MoneyTransferPage() {
               />
               {message && (
                 <div
-                  className={`mt-4 p-4 rounded-lg text-sm font-medium animate-fade-in ${
+                  className={`mt-4 p-4 rounded-lg text-sm font-medium animate fade-in ${
                     message.includes('successful') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                   }`}
                   role="alert"
@@ -191,6 +208,7 @@ export default function MoneyTransferPage() {
                   <TransactionReceipt
                     creditTransaction={receiptData.credit_transaction}
                     debitTransaction={receiptData.debit_transaction}
+                    onClose={handleCloseReceipt}
                   />
                 </div>
                 <div className="flex justify-end mt-6">
