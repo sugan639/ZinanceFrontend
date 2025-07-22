@@ -136,7 +136,7 @@ export default function ProfileDrawer({ user, visible, setVisible }: Props) {
         <button
           onClick={() => setVisible?.(false)}
           className="absolute top-4 right-4 text-gray-500 hover:text-red-600 transition"
-       
+          title="Close"
         >
           <X className="w-6 h-6" />
         </button>

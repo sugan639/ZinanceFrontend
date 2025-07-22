@@ -8,260 +8,443 @@ import Loading from '@/app/admin/components/Loading';
 import axios from 'axios';
 import { ADMIN_PROFILE_URL } from '@/lib/constants';
 
+// Icons
+import BusinessIcon from '@mui/icons-material/Business';
+import SearchIcon from '@mui/icons-material/Search';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import EditIcon from '@mui/icons-material/Edit';
+import ClearIcon from '@mui/icons-material/Clear';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+
+// MUI Components
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Paper,
+  Card,
+  CardContent,
+  CardHeader,
+  Divider,
+  Grid,
+  Alert,
+  AlertTitle,
+} from '@mui/material';
+
 /* ─────────────────────────────────── API ENDPOINTS ─────────────────────────────────── */
 const CREATE_URL = 'http://localhost:8080/Banking_App/admin/branch/create';
-const GET_URL    = 'http://localhost:8080/Banking_App/admin/branches/ifsc-code';
+const GET_URL = 'http://localhost:8080/Banking_App/admin/branches/ifsc-code';
 const UPDATE_URL = 'http://localhost:8080/Banking_App/admin/branches';
 
-/* ────────────────────────────────── Types & Helpers ────────────────────────────────── */
+/* ────────────────────────────────── Types & Interfaces ────────────────────────────────── */
 interface Branch {
-  branchId:  string;
-  adminId:   string;
-  bankName:  string;
-  location:  string;
-  ifscCode:  string;
+  branchId: string;
+  adminId: string;
+  bankName: string;
+  location: string;
+  ifscCode: string;
   createdAt: string;
-  modifiedAt:string;
-  modifiedBy:string;
+  modifiedAt: string;
+  modifiedBy: string;
 }
 
-const labelCls   = 'block text-sm font-medium text-gray-700 mb-1';
-const inputCls   = 'border border-gray-400 rounded px-3 py-2 w-full';
-const btnPrimary = 'px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded';
-const btnGhost   = 'px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded';
-
 export default function BranchPage() {
-  /* ───────────── Top‑level state ───────────── */
   const [loading, setLoading] = useState(true);
-  const [user, setUser]       = useState<any>(null);
+  const [user, setUser] = useState<any>(null);
 
-  /* create‑branch form */
-  const [createForm, setCreate] = useState({
+  // Create Branch Form
+  const [createForm, setCreateForm] = useState({
     new_admin_id: '',
-    bank_name   : '',
-    location    : '',
+    bank_name: '',
+    location: '',
   });
 
-  /* search + update */
-  const [searchId, setSearchId]   = useState('');
-  const [updateForm, setUpdate]   = useState<Partial<Branch>>({});
-  const [branch, setBranch]       = useState<Branch | null>(null);
+  // Search & Update State
+  const [searchId, setSearchId] = useState('');
+  const [updateForm, setUpdateForm] = useState<Partial<Branch>>({});
+  const [branch, setBranch] = useState<Branch | null>(null);
 
-  /* feedback */
+  // Feedback Messages
   const [message, setMessage] = useState('');
-  const [error,   setError]   = useState('');
+  const [error, setError] = useState('');
+  const [isCreated, setIsCreated] = useState(false); // Track if branch was created
 
-  const resetFeedback = () => { setMessage(''); setError(''); };
+  const resetFeedback = () => {
+    setMessage('');
+    setError('');
+  };
 
-  /* ───────────── Auth check ───────────── */
+  /* ───────────── Auth Check ───────────── */
   useEffect(() => {
-    axios.get(ADMIN_PROFILE_URL, { withCredentials: true })
-         .then(res => setUser(res.data))
-         .catch(() => (window.location.href = '/login'))
-         .finally(() => setLoading(false));
+    axios
+      .get(ADMIN_PROFILE_URL, { withCredentials: true })
+      .then((res) => setUser(res.data))
+      .catch(() => (window.location.href = '/login'))
+      .finally(() => setLoading(false));
   }, []);
 
   /* ───────────── Handlers ───────────── */
+
   const handleCreate = async () => {
     resetFeedback();
+    setIsCreated(false);
     try {
       const res = await axios.post(CREATE_URL, createForm, { withCredentials: true });
       setBranch(res.data);
-      setMessage(res.data.message || 'Branch created');
-    } catch (e: any) {
-      setError(e?.response?.data?.error || 'Creation failed');
+      setMessage(res.data.message || 'Branch created successfully!');
+      setIsCreated(true); // Mark as newly created
+      setUpdateForm({}); // Reset update form
+      setCreateForm({ new_admin_id: '', bank_name: '', location: '' }); // Clear form
+    } catch (err: any) {
+      setError(err?.response?.data?.error || 'Failed to create branch.');
     }
   };
 
   const handleSearch = async () => {
     resetFeedback();
-    if (!searchId) return setError('Enter a IFSC code');
+    setIsCreated(false); // Never show "created" after search
+    if (!searchId.trim()) return setError('Please enter an IFSC code.');
+
     try {
       const res = await axios.get(`${GET_URL}?ifsccode=${searchId}`, { withCredentials: true });
       setBranch(res.data);
-      setUpdate({
-        branchId : res.data.branchId,
-        bankName : res.data.bankName,
-        location : res.data.location,
-        adminId  : res.data.adminId,
-        
+      setUpdateForm({
+        branchId: res.data.branchId,
+        bankName: res.data.bankName,
+        location: res.data.location,
+        adminId: res.data.adminId,
+        ifscCode: res.data.ifscCode,
       });
-    } catch (e: any) {
-      setError(e?.response?.data?.error || 'Branch not found');
+    } catch (err: any) {
+      setError(err?.response?.data?.error || 'Branch not found.');
+      setBranch(null);
+      setUpdateForm({});
     }
   };
 
   const handleUpdate = async () => {
     resetFeedback();
-    if (!updateForm.branchId) return setError('Branch ID required');
+    if (!updateForm.branchId) return setError('Branch ID is required for update.');
 
-    /* camelCase → snake_case payload */
     const payload = {
-      branch_id : updateForm.branchId,
-      bank_name : updateForm.bankName,
-      location  : updateForm.location,
-      admin_id  : updateForm.adminId,
-      ifsc_code : updateForm.ifscCode,
+      branch_id: updateForm.branchId,
+      bank_name: updateForm.bankName,
+      location: updateForm.location,
+      admin_id: updateForm.adminId,
+      ifsc_code: updateForm.ifscCode,
     };
 
     try {
       const res = await axios.put(UPDATE_URL, payload, { withCredentials: true });
       setBranch(res.data);
-      setMessage('Branch updated');
-    } catch (e: any) {
-      setError(e?.response?.data?.error || 'Update failed');
+      setMessage('Branch updated successfully!');
+    } catch (err: any) {
+      setError(err?.response?.data?.error || 'Update failed.');
     }
   };
 
-  const clearCreate = () => setCreate({ new_admin_id: '', bank_name: '', location: '' });
-  const clearUpdate = () => { setUpdate({}); setBranch(null); setSearchId(''); };
+  const clearCreate = () => {
+    setCreateForm({ new_admin_id: '', bank_name: '', location: '' });
+    resetFeedback();
+  };
 
-  /* ───────────── UI Loading ───────────── */
-  if (loading) return <Loading message="Loading branches..." />;
+  const clearUpdate = () => {
+    setUpdateForm({});
+    setBranch(null);
+    setSearchId('');
+    resetFeedback();
+    setIsCreated(false);
+  };
 
-  /* ───────────── UI ───────────── */
+  /* ───────────── Loading State ───────────── */
+  if (loading) return <Loading message="Loading branch management..." />;
+
   return (
-    <div className="flex">
+    <>
       <Sidebar />
       <div className="flex-1">
         <TopBar />
         <ProfileDrawer user={user} />
 
-        <main className="pl-64 pt-20 p-6 space-y-12 bg-gray-100 min-h-screen text-gray-800">
-          {/* ───────────── Create Branch ───────────── */}
-          <section className="bg-white shadow rounded p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-blue-800">Create Branch</h2>
-              <button onClick={clearCreate} className={btnGhost}>Clear</button>
-            </div>
+        <main className="pl-64 pt-20 p-6 space-y-8 bg-gray-50 min-h-screen">
+          {/* Header */}
+          <Box sx={{ textAlign: 'center', mb: 6 }}>
+            <Typography variant="h4" component="h1" className="text-3xl font-bold text-gray-800 flex items-center justify-center gap-2">
+              <BusinessIcon fontSize="large" /> Branch Management
+            </Typography>
+            <Typography variant="subtitle1" className="text-gray-600 mt-2">
+              Create, search, and manage bank branches
+            </Typography>
+          </Box>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label className={labelCls}>Admin&nbsp;ID</label>
-                <input
-                  type="number"
-                  className={inputCls}
-                  value={createForm.new_admin_id}
-                  onChange={e => setCreate({ ...createForm, new_admin_id: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className={labelCls}>Bank&nbsp;Name</label>
-                <input
-                  className={inputCls}
-                  value={createForm.bank_name}
-                  onChange={e => setCreate({ ...createForm, bank_name: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className={labelCls}>Location</label>
-                <input
-                  className={inputCls}
-                  value={createForm.location}
-                  onChange={e => setCreate({ ...createForm, location: e.target.value })}
-                />
-              </div>
-            </div>
+          {/* Success & Error Alerts */}
+          {message && !isCreated && (
+            <Alert severity="success" icon={<CheckCircleOutlineIcon />} sx={{ mb: 3 }}>
+              <AlertTitle>Success</AlertTitle>
+              {message}
+            </Alert>
+          )}
+          {error && (
+            <Alert severity="error" icon={<ErrorOutlineIcon />} sx={{ mb: 3 }}>
+              <AlertTitle>Error</AlertTitle>
+              {error}
+            </Alert>
+          )}
 
-            <button onClick={handleCreate} className={`${btnPrimary} mt-6`}>Create</button>
-          </section>
+          {/* Create Branch Section */}
+          <Card elevation={3} sx={{ borderRadius: 2 }}>
+            <CardHeader
+              avatar={<AddCircleOutlineIcon color="primary" />}
+              title={
+                <Typography variant="h6" fontWeight="bold" color="#1976d2">
+                  Create New Branch
+                </Typography>
+              }
+              action={
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  startIcon={<ClearIcon />}
+                  onClick={clearCreate}
+                  size="small"
+                  sx={{ borderRadius: '8px' }}
+                >
+                  Clear
+                </Button>
+              }
+            />
+            <Divider />
+            <CardContent>
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={4}>
+                  <TextField
+                    fullWidth
+                    label="Admin ID"
+                    placeholder="Enter Admin ID"
+                    type="number"
+                    value={createForm.new_admin_id}
+                    onChange={(e) =>
+                      setCreateForm({ ...createForm, new_admin_id: e.target.value })
+                    }
+                    variant="outlined"
+                    size="small"
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <TextField
+                    fullWidth
+                    label="Bank Name"
+                    placeholder="e.g., Zinance Bank"
+                    value={createForm.bank_name}
+                    onChange={(e) =>
+                      setCreateForm({ ...createForm, bank_name: e.target.value })
+                    }
+                    variant="outlined"
+                    size="small"
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <TextField
+                    fullWidth
+                    label="Location"
+                    placeholder="e.g., Mumbai"
+                    value={createForm.location}
+                    onChange={(e) =>
+                      setCreateForm({ ...createForm, location: e.target.value })
+                    }
+                    variant="outlined"
+                    size="small"
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                  />
+                </Grid>
+              </Grid>
+              <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={<AddCircleOutlineIcon />}
+                  onClick={handleCreate}
+                  size="large"
+                  sx={{ borderRadius: '8px' }}
+                >
+                  Create Branch
+                </Button>
+              </Box>
+            </CardContent>
+          </Card>
 
-          {/* ───────────── Get / Update Branch ───────────── */}
-          <section className="bg-white shadow rounded p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-blue-800">Get / Update Branch</h2>
-              <button onClick={clearUpdate} className={btnGhost}>Clear</button>
-            </div>
+          {/* Get / Update Branch Section */}
+          <Card elevation={3} sx={{ borderRadius: 2 }}>
+            <CardHeader
+              avatar={<SearchIcon color="primary" />}
+              title={
+                <Typography variant="h6" fontWeight="bold" color="#1976d2">
+                  Search & Update Branch
+                </Typography>
+              }
+              action={
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  startIcon={<ClearIcon />}
+                  onClick={clearUpdate}
+                  size="small"
+                  sx={{ borderRadius: '8px' }}
+                >
+                  Clear
+                </Button>
+              }
+            />
+            <Divider />
+            <CardContent>
+              {/* Search Input */}
+              <Grid container spacing={2} alignItems="center" sx={{ mb: 4 }}>
+                <Grid item xs={12} sm={8}>
+                  <TextField
+                    fullWidth
+                    label="IFSC Code"
+                    placeholder="e.g., ZIN2CA4494"
+                    value={searchId}
+                    onChange={(e) => setSearchId(e.target.value)}
+                    variant="outlined"
+                    size="small"
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    color="primary"
+                    startIcon={<SearchIcon />}
+                    onClick={handleSearch}
+                    size="large"
+                    sx={{ height: '100%', borderRadius: '8px' }}
+                  >
+                    Fetch
+                  </Button>
+                </Grid>
+              </Grid>
 
-            {/* Fetch */}
-            <div className="flex flex-wrap gap-4 mb-6">
-              <div className="flex-grow md:flex-grow-0">
-                <label className={labelCls}>Branch&nbsp;IFSC code</label>
-                <input
-                  placeholder="ZIN2CA4494"
-                  className={inputCls}
-                  value={searchId}
-                  onChange={e => setSearchId(e.target.value)}
-                />
-              </div>
-              <button onClick={handleSearch} className={btnPrimary}>Fetch</button>
-            </div>
+              {/* Update Form */}
+              {branch && (
+                <>
+                  <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2', mt: 3 }}>
+                    <EditIcon fontSize="small" /> Update Branch Details
+                  </Typography>
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} sm={3}>
+                      <TextField
+                        fullWidth
+                        label="Branch ID"
+                        value={updateForm.branchId || ''}
+                        disabled
+                        variant="outlined"
+                        size="small"
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: '8px',
+                            backgroundColor: '#f5f5f5',
+                            cursor: 'not-allowed',
+                          },
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={3}>
+                      <TextField
+                        fullWidth
+                        label="Bank Name"
+                        value={updateForm.bankName || ''}
+                        onChange={(e) =>
+                          setUpdateForm({ ...updateForm, bankName: e.target.value })
+                        }
+                        variant="outlined"
+                        size="small"
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={3}>
+                      <TextField
+                        fullWidth
+                        label="Location"
+                        value={updateForm.location || ''}
+                        onChange={(e) =>
+                          setUpdateForm({ ...updateForm, location: e.target.value })
+                        }
+                        variant="outlined"
+                        size="small"
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={3}>
+                      <TextField
+                        fullWidth
+                        label="Admin ID"
+                        type="number"
+                        value={updateForm.adminId || ''}
+                        onChange={(e) =>
+                          setUpdateForm({ ...updateForm, adminId: e.target.value })
+                        }
+                        variant="outlined"
+                        size="small"
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                      />
+                    </Grid>
+                  </Grid>
+                  <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      startIcon={<EditIcon />}
+                      onClick={handleUpdate}
+                      size="large"
+                      sx={{ borderRadius: '8px' }}
+                    >
+                      Update Branch
+                    </Button>
+                  </Box>
+                </>
+              )}
+            </CardContent>
+          </Card>
 
-            {/* Update form (visible after fetch) */}
-            {branch && (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                 {/* Update form – Branch ID now read‑only */}
-                <div>
-                <label className={labelCls}>Branch ID</label>
-                <input
-                    className={`${inputCls} bg-gray-100 cursor-not-allowed`}
-                    value={updateForm.branchId || ''}
-                    disabled
-                />
-                </div>
-
-
-                  <div>
-                    <label className={labelCls}>Bank&nbsp;Name</label>
-                    <input
-                      className={inputCls}
-                      value={updateForm.bankName || ''}
-                      onChange={e => setUpdate({ ...updateForm, bankName: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelCls}>Location</label>
-                    <input
-                      className={inputCls}
-                      value={updateForm.location || ''}
-                      onChange={e => setUpdate({ ...updateForm, location: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelCls}>Admin&nbsp;ID</label>
-                    <input
-                      type="number"
-                      className={inputCls}
-                      value={updateForm.adminId || ''}
-                      onChange={e => setUpdate({ ...updateForm, adminId: e.target.value })}
-                    />
-                  </div>
-                  
-                </div>
-
-                <button onClick={handleUpdate} className={`${btnPrimary} mt-6`}>Update</button>
-              </>
-            )}
-          </section>
-
-
-            {message && branch && !updateForm.ifscCode && (
-            <section className="bg-green-50 border border-green-200 rounded p-4 text-green-900">
-                <h3 className="text-lg font-semibold mb-2">Branch Created:</h3>
-                <ul className="list-disc ml-5 space-y-1 text-sm">
-                <li><strong>Admin ID:</strong> {branch.adminId}</li>
-                <li><strong>Bank Name:</strong> {branch.bankName}</li>
-                <li><strong>Location:</strong> {branch.location}</li>
-                <li><strong>IFSC Code:</strong> {branch.ifscCode}</li>
-                <li><strong>Modified By:</strong> {branch.modifiedBy}</li>
-                </ul>
-            </section>
-            )}
-
-
-          {/* ───────────── Feedback ───────────── */}
-          {(message || error) && (
-            <div
-              className={`p-4 rounded w-full md:w-2/3 ${
-                message ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-              }`}
-            >
-              {message || error}
-            </div>
+          {/* Show "Branch Created" card ONLY after creation */}
+          {isCreated && branch && (
+            <Card elevation={3} sx={{ borderRadius: 2 }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+                  ✅ Branch Created Successfully
+                </Typography>
+                <Divider sx={{ my: 2 }} />
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <Typography><strong>Admin ID:</strong> {branch.adminId}</Typography>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Typography><strong>Bank Name:</strong> {branch.bankName}</Typography>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Typography><strong>Location:</strong> {branch.location}</Typography>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Typography><strong>IFSC Code:</strong> {branch.ifscCode}</Typography>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Typography><strong>Modified By:</strong> {branch.modifiedBy}</Typography>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Typography><strong>Created At:</strong> {new Date(Number(branch.createdAt)).toLocaleString()}</Typography>
+                  </Grid>
+                </Grid>
+              </CardContent>
+            </Card>
           )}
         </main>
       </div>
-    </div>
+    </>
   );
 }

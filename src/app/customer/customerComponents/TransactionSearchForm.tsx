@@ -1,32 +1,39 @@
 'use client';
 
 import React, { useState } from 'react';
-import { TextField, Button, Tabs, Tab, Box, Divider } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-
-
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-
+import {
+  TextField,
+  Button,
+  Tabs,
+  Tab,
+  Box,
+  Select,
+  MenuItem,
+  InputLabel,
+  FormControl,
+} from '@mui/material';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 type Props = {
   onSubmit: (params: {
     transaction_id?: string;
-    transaction_reference_number?: string;
-    customer_id?: number;
+    customer_id?: string;
     account_number?: number;
     from_date?: number;
     to_date?: number;
+    transaction_type?: 'DEBIT' | 'CREDIT';
   }) => void;
   message?: string;
+  user: any;
 };
 
-export default function TransactionSearchForm({ onSubmit, message }: Props) {
+export default function TransactionSearchForm({ onSubmit, message, user }: Props) {
   const [mode, setMode] = useState<'BY_ID' | 'BY_FILTER'>('BY_ID');
   const [txnId, setTxnId] = useState('');
-  const [refNo, setRefNo] = useState('');
-  const [customerId, setCustomerId] = useState('');
+  const [accountOption, setAccountOption] = useState<'ALL' | 'SPECIFIC'>('ALL');
   const [accountNumber, setAccountNumber] = useState('');
+  const [transactionType, setTransactionType] = useState<'ALL' | 'DEBIT' | 'CREDIT'>('ALL');
   const [fromDate, setFromDate] = useState<Date | null>(null);
   const [toDate, setToDate] = useState<Date | null>(null);
   const [formError, setFormError] = useState('');
@@ -35,31 +42,23 @@ export default function TransactionSearchForm({ onSubmit, message }: Props) {
     setFormError('');
 
     if (mode === 'BY_ID') {
-      if (txnId && refNo) {
-        setFormError('Please provide only one: either Transaction ID or Reference Number.');
-        return;
-      }
-      if (!txnId && !refNo) {
-        setFormError('Please provide either Transaction ID or Reference Number.');
+      if (!txnId) {
+        setFormError('Please provide a Transaction ID.');
         return;
       }
 
       return onSubmit({
-        ...(txnId && { transaction_id: txnId }),
-        ...(refNo && { transaction_reference_number: refNo }),
+        transaction_id: txnId,
       });
-    }
-
-    const hasCustomerId = !!customerId.trim();
-    const hasAccountNumber = !!accountNumber.trim();
-
-    if ((hasCustomerId && hasAccountNumber) || (!hasCustomerId && !hasAccountNumber)) {
-      setFormError('Please provide either Customer ID or Account Number — not both.');
-      return;
     }
 
     if (!fromDate || !toDate) {
       setFormError('Please select both From and To dates.');
+      return;
+    }
+
+    if (accountOption === 'SPECIFIC' && !accountNumber.trim()) {
+      setFormError('Please provide an Account Number.');
       return;
     }
 
@@ -68,18 +67,24 @@ export default function TransactionSearchForm({ onSubmit, message }: Props) {
       to_date: toDate.getTime(),
     };
 
-    if (hasCustomerId) {
-      payload.customer_id = Number(customerId);
+    if (accountOption === 'ALL') {
+      if (!user?.customerId) {
+        setFormError('User ID not available. Please try again or log in.');
+        return;
+      }
+      payload.customer_id = String(user.customerId);
+    } else {
+      payload.account_number = accountNumber;
     }
-    if (hasAccountNumber) {
-      payload.account_number = Number(accountNumber);
+
+    if (transactionType !== 'ALL') {
+      payload.transaction_type = transactionType;
     }
 
     onSubmit(payload);
   };
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
     <div className="p-6 bg-white rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl animate-slide-up max-w-lg mx-auto">
       <h2 className="text-xl font-semibold text-gray-800 mb-4">Search Transactions</h2>
       <Tabs
@@ -88,9 +93,9 @@ export default function TransactionSearchForm({ onSubmit, message }: Props) {
           setMode(newValue);
           setFormError('');
           setTxnId('');
-          setRefNo('');
-          setCustomerId('');
+          setAccountOption('ALL');
           setAccountNumber('');
+          setTransactionType('ALL');
           setFromDate(null);
           setToDate(null);
         }}
@@ -103,95 +108,86 @@ export default function TransactionSearchForm({ onSubmit, message }: Props) {
         }}
         aria-label="Transaction search mode tabs"
       >
-        <Tab label="By Transaction / Ref No" value="BY_ID" />
-        <Tab label="By Customer / Date" value="BY_FILTER" />
+        <Tab label="By Transaction ID" value="BY_ID" />
+        <Tab label="By Account / Date" value="BY_FILTER" />
       </Tabs>
 
       <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
         {mode === 'BY_ID' ? (
-          <>
-            <TextField
-              label="Transaction ID"
-              value={txnId}
-              onChange={(e) => setTxnId(e.target.value)}
-              placeholder="Enter Transaction ID"
-              variant="outlined"
-              fullWidth
-              size="small"
-              sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-              aria-label="Transaction ID input"
-            />
-            <Divider sx={{ my: 1 }}>
-              <span className="text-sm text-gray-500">or</span>
-            </Divider>
-            <TextField
-              label="Reference Number"
-              value={refNo}
-              onChange={(e) => setRefNo(e.target.value)}
-              placeholder="Enter Reference Number"
-              variant="outlined"
-              fullWidth
-              size="small"
-              sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-              aria-label="Reference Number input"
-            />
-          </>
+          <TextField
+            label="Transaction ID"
+            value={txnId}
+            onChange={(e) => setTxnId(e.target.value)}
+            placeholder="Enter Transaction ID"
+            variant="outlined"
+            fullWidth
+            size="small"
+            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+            aria-label="Transaction ID input"
+          />
         ) : (
+          
+          
+          
+          
           <>
-            <TextField
-              label="Customer ID"
-              value={customerId}
-              onChange={(e) => setCustomerId(e.target.value)}
-              placeholder="Enter Customer ID"
-              variant="outlined"
-              fullWidth
-              size="small"
-              sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-              aria-label="Customer ID input"
-            />
-            <Divider sx={{ my: 1 }}>
-              <span className="text-sm text-gray-500">or</span>
-            </Divider>
-            <TextField
-              label="Account Number"
-              value={accountNumber}
-              onChange={(e) => setAccountNumber(e.target.value)}
-              placeholder="Enter Account Number"
-              variant="outlined"
-              fullWidth
-              size="small"
-              sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
-              aria-label="Account Number input"
-            />
-            <div className="flex flex-col sm:flex-row gap-2">
-              <DatePicker
-                  label="From Date"
-                  value={fromDate}
-                  onChange={(newValue) => setFromDate(newValue)}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      size: 'small',
-                      sx: { '& .MuiOutlinedInput-root': { borderRadius: '8px' } },
-                      'aria-label': 'From Date picker',
-                    },
-                  }}
-                />
-                <DatePicker
-                  label="To Date"
-                  value={toDate}
-                  onChange={(newValue) => setToDate(newValue)}
-                  slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    size: 'small',
-                    sx: { '& .MuiOutlinedInput-root': { borderRadius: '8px' } },
-                    'aria-label': 'To Date picker', // ✅ Correct usage
-                  },
-                }}
-
-                
+            <FormControl fullWidth size="small">
+              <InputLabel id="account-option-label">Account Option</InputLabel>
+              <Select
+                labelId="account-option-label"
+                value={accountOption}
+                label="Account Option"
+                onChange={(e) => setAccountOption(e.target.value as 'ALL' | 'SPECIFIC')}
+                sx={{ borderRadius: '8px' }}
+                aria-label="Account option select"
+              >
+                <MenuItem value="ALL">All Accounts</MenuItem>
+                <MenuItem value="SPECIFIC">Specific Account</MenuItem>
+              </Select>
+            </FormControl>
+            {accountOption === 'SPECIFIC' && (
+              <TextField
+                label="Account Number"
+                value={accountNumber}
+                onChange={(e) => setAccountNumber(e.target.value)}
+                placeholder="Enter Account Number"
+                variant="outlined"
+                fullWidth
+                size="small"
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                aria-label="Account Number input"
               />
+            )}
+        
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="w-full">
+                <label className="text-sm text-gray-800 mb-1 block" htmlFor="from-date">
+                  From Date
+                </label>
+                <DatePicker
+                  id="from-date"
+                  selected={fromDate}
+                  onChange={(date: Date | null) => setFromDate(date)}
+                  dateFormat="dd/MM/yyyy"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                  placeholderText="Select start date"
+                  aria-label="From Date picker"
+                />
+              </div>
+              <div className="w-full">
+                <label className="text-sm text-gray-800 mb-1 block" htmlFor="to-date">
+                  To Date
+                </label>
+                <DatePicker
+                  id="to-date"
+                  selected={toDate}
+                  onChange={(date: Date | null) => setToDate(date)}
+                  dateFormat="dd/MM/yyyy"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                  placeholderText="Select end date"
+                  aria-label="To Date picker"
+                />
+              </div>
             </div>
           </>
         )}
@@ -223,8 +219,54 @@ export default function TransactionSearchForm({ onSubmit, message }: Props) {
         )}
       </Box>
     </div>
-    </LocalizationProvider>
   );
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // <FormControl fullWidth size="small">
+    //           <InputLabel id="transaction-type-label">Transaction Type</InputLabel>
+    //           <Select
+    //             labelId="transaction-type-label"
+    //             value={transactionType}
+    //             label="Transaction Type"
+    //             onChange={(e) => setTransactionType(e.target.value as 'ALL' | 'DEBIT' | 'CREDIT')}
+    //             sx={{ borderRadius: '8px' }}
+    //             aria-label="Transaction type select"
+    //           >
+    //             <MenuItem value="ALL">All</MenuItem>
+    //             <MenuItem value="DEBIT">Debit</MenuItem>
+    //             <MenuItem value="CREDIT">Credit</MenuItem>
+    //           </Select>
+    //         </FormControl>

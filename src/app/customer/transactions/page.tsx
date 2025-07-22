@@ -18,28 +18,38 @@ import {
   TableRow,
   Paper,
   Button,
-  Chip,
 } from '@mui/material';
+import { format } from 'date-fns';
 
-interface Transaction {
+interface ApiTransaction {
   transactionId: string | null;
   transactionReferenceNumber: string;
-  type: string;
+  type: 'INTRA_BANK_DEBIT' | 'INTRA_BANK_CREDIT';
   amount: string;
   closingBalance: string;
   doneBy: string;
   userId: string;
   timestamp: string;
   status: string;
+  accountNumber: string;
+  beneficiaryAccountNumber: string;
+}
+
+interface DisplayTransaction {
+  fromAccount: string;
+  toAccount: string;
+  amount: string;
+  type: 'Debit' | 'Credit';
+  timestamp: string;
 }
 
 interface GroupedTransactions {
-  [accountNumber: string]: Transaction[];
+  [accountNumber: string]: ApiTransaction[];
 }
 
 export default function FindTransactionsPage() {
   const [user, setUser] = useState<any>(null);
-  const [transactions, setTransactions] = useState<Transaction[] | GroupedTransactions | null>(null);
+  const [transactions, setTransactions] = useState<DisplayTransaction[] | { [accountNumber: string]: DisplayTransaction[] } | null>(null);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -58,11 +68,11 @@ export default function FindTransactionsPage() {
 
   const fetchTransactions = async (params: {
     transaction_id?: string;
-    transaction_reference_number?: string;
-    customer_id?: number;
-    account_number?: number;
+    customer_id?: string;
+    account_number?: string;
     from_date?: number;
     to_date?: number;
+    transaction_type?: 'DEBIT' | 'CREDIT';
     limit?: number;
     offset?: number;
   }) => {
@@ -75,33 +85,72 @@ export default function FindTransactionsPage() {
       const response = await axios.post(CUSTOMER_TRANSACTIONS_URL, params, { withCredentials: true });
 
       if (response.data.transactions) {
-        // Coerce transactionId and transactionReferenceNumber to strings
-        const coerceToStrings = (tx: any): Transaction => ({
-          ...tx,
-          transactionId: tx.transactionId != null ? String(tx.transactionId) : null,
-          transactionReferenceNumber: String(tx.transactionReferenceNumber),
-          amount: String(tx.amount),
-          closingBalance: String(tx.closingBalance),
-          timestamp: String(tx.timestamp),
-          userId: String(tx.userId),
-          type: String(tx.type),
-          doneBy: String(tx.doneBy),
-          status: String(tx.status),
-        });
+        let processedTransactions: DisplayTransaction[] | { [accountNumber: string]: DisplayTransaction[] };
 
-        let processedTransactions: Transaction[] | GroupedTransactions;
-        if (Array.isArray(response.data.transactions)) {
-          processedTransactions = response.data.transactions.map(coerceToStrings);
+        if (params.transaction_id) {
+          // For BY_ID, merge debit and credit rows into one customer-centric row
+          const txs = response.data.transactions as ApiTransaction[];
+          if (txs.length !== 2) {
+            setMessage('Unexpected transaction data format.');
+            return;
+          }
+
+          const debitTx = txs.find((tx) => tx.type === 'INTRA_BANK_DEBIT');
+          const creditTx = txs.find((tx) => tx.type === 'INTRA_BANK_CREDIT');
+
+          if (!debitTx || !creditTx || debitTx.transactionId !== creditTx.transactionId) {
+            setMessage('Invalid debit/credit transaction pair.');
+            return;
+          }
+
+          const isDebit = debitTx.userId === user?.customerId; // Check if user initiated debit
+          const displayTx: DisplayTransaction = {
+            fromAccount: debitTx.accountNumber,
+            toAccount: creditTx.beneficiaryAccountNumber,
+            amount: debitTx.amount,
+            type: isDebit ? 'Debit' : 'Credit',
+            timestamp: debitTx.timestamp,
+          };
+          processedTransactions = [displayTx];
+
         } else {
+          // For BY_FILTER, handle grouped (customer_id) or flat (account_number) response
+          const txData = response.data.transactions;
           processedTransactions = {};
-          Object.entries(response.data.transactions).forEach(([account, txList]) => {
-            processedTransactions[account] = (txList as any[]).map(coerceToStrings);
-          });
-        }
-        
-      
 
-        setTransactions(processedTransactions);
+          if (Array.isArray(txData)) {
+            // Specific account: Flat array of ApiTransaction[]
+            const account = params.account_number || 'Unknown Account';
+            processedTransactions[account] = txData.map((tx: ApiTransaction) => ({
+              fromAccount: tx.type === 'INTRA_BANK_DEBIT' ? tx.accountNumber : tx.beneficiaryAccountNumber,
+              toAccount: tx.type === 'INTRA_BANK_CREDIT' ? tx.accountNumber : tx.beneficiaryAccountNumber,
+              amount: tx.amount,
+              type: tx.type === 'INTRA_BANK_DEBIT' ? 'Debit' : 'Credit',
+              timestamp: tx.timestamp,
+            }));
+          } else {
+            // All accounts: Grouped object { [accountNumber: string]: ApiTransaction[] }
+            const grouped: GroupedTransactions = txData;
+            Object.entries(grouped).forEach(([account, txList]) => {
+              if (Array.isArray(txList)) {
+                processedTransactions[account] = txList.map((tx: ApiTransaction) => ({
+                  fromAccount: tx.type === 'INTRA_BANK_DEBIT' ? tx.accountNumber : tx.beneficiaryAccountNumber,
+                  toAccount: tx.type === 'INTRA_BANK_CREDIT' ? tx.accountNumber : tx.beneficiaryAccountNumber,
+                  amount: tx.amount,
+                  type: tx.type === 'INTRA_BANK_DEBIT' ? 'Debit' : 'Credit',
+                  timestamp: tx.timestamp,
+                }));
+              } else {
+                setMessage(`Invalid transaction list for account ${account}.`);
+              }
+            });
+          }
+        }
+
+        setTransactions(Object.keys(processedTransactions).length > 0 ? processedTransactions : null);
+        if (Object.keys(processedTransactions).length === 0) {
+          setMessage('No transactions found.');
+        }
       } else {
         setMessage('No transactions found.');
       }
@@ -147,7 +196,7 @@ export default function FindTransactionsPage() {
           </header>
           <section className="bg-white p-6 rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl animate-slide-up">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Search Transactions</h2>
-            <TransactionSearchForm onSubmit={handleSearch} message={message} />
+            <TransactionSearchForm onSubmit={handleSearch} message={message} user={user} />
             {message && (
               <div
                 className="mt-4 p-4 rounded-lg text-sm font-medium animate-fade-in bg-blue-100 text-blue-700"
@@ -164,12 +213,14 @@ export default function FindTransactionsPage() {
               {Array.isArray(transactions) ? (
                 <TransactionTable transactions={transactions} />
               ) : (
-                Object.entries(transactions).map(([acct, txList]: [string, Transaction[]]) => (
-                  <div key={acct} className="mb-6">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-3">Account: {acct}</h3>
-                    <TransactionTable transactions={txList} />
-                  </div>
-                ))
+                Object.entries(transactions as { [accountNumber: string]: DisplayTransaction[] }).map(
+                  ([acct, txList]: [string, DisplayTransaction[]]) => (
+                    <div key={acct} className="mb-6">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-3">Account: {acct}</h3>
+                      <TransactionTable transactions={txList} />
+                    </div>
+                  )
+                )
               )}
               <div className="flex justify-between mt-6">
                 <Button
@@ -177,7 +228,7 @@ export default function FindTransactionsPage() {
                   color="primary"
                   onClick={() => handlePageChange(Math.max(0, currentOffset - LIMIT))}
                   disabled={currentOffset === 0}
-                  sx={{ px: 4, py: 1.5 }}
+                  sx={{ px: 4, py: 1.5, borderRadius: '8px', textTransform: 'none' }}
                   aria-label="Previous page"
                 >
                   Previous
@@ -187,7 +238,7 @@ export default function FindTransactionsPage() {
                   color="primary"
                   onClick={() => handlePageChange(currentOffset + LIMIT)}
                   disabled={!transactions || (Array.isArray(transactions) && transactions.length < LIMIT)}
-                  sx={{ px: 4, py: 1.5 }}
+                  sx={{ px: 4, py: 1.5, borderRadius: '8px', textTransform: 'none' }}
                   aria-label="Next page"
                 >
                   Next
@@ -201,45 +252,112 @@ export default function FindTransactionsPage() {
   );
 }
 
-function TransactionTable({ transactions }: { transactions: Transaction[] }) {
+function TransactionTable({ transactions }: { transactions: DisplayTransaction[] }) {
   return (
-    <TableContainer component={Paper} sx={{ borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+    <TableContainer
+      component={Paper}
+      sx={{
+        borderRadius: '12px',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+        overflowX: 'auto',
+      }}
+    >
       <Table stickyHeader aria-label="Transaction history table">
         <TableHead>
           <TableRow>
-            {['Txn ID', 'Ref No', 'Type', 'Amount', 'Balance', 'By', 'UID', 'Timestamp', 'Status'].map((header) => (
+            {[
+              { label: 'From Account', width: '25%' },
+              { label: 'To Account', width: '25%' },
+              { label: 'Amount', width: '15%' },
+              { label: 'Type', width: '15%' },
+              { label: 'Timestamp', width: '20%' },
+            ].map((header) => (
               <TableCell
-                key={header}
-                sx={{ fontWeight: 'bold', backgroundColor: '#1976d2', color: 'white', py: 2 }}
-                align="left"
+                key={header.label}
+                sx={{
+                  fontWeight: 'bold',
+                  backgroundColor: '#1976d2',
+                  color: 'white',
+                  py: 2.5,
+                  px: 3,
+                  width: header.width,
+                  fontSize: '0.95rem',
+                  borderRight: '1px solid rgba(255,255,255,0.1)',
+                }}
+                align={header.label === 'Amount' ? 'right' : 'left'}
               >
-                {header}
+                {header.label}
               </TableCell>
+
             ))}
           </TableRow>
         </TableHead>
+
         <TableBody>
           {transactions.map((tx, idx) => (
             <TableRow
-              key={tx.transactionReferenceNumber}
-              sx={{ backgroundColor: idx % 2 === 0 ? 'white' : '#e3f2fd' }}
+              key={`${tx.fromAccount}-${tx.timestamp}`}
+              sx={{
+                backgroundColor: idx % 2 === 0 ? 'white' : '#e3f2fd',
+                '&:hover': {
+                  backgroundColor: '#f1f5f9',
+                  transition: 'background-color 0.2s ease-in-out',
+                },
+              }}
             >
-              <TableCell sx={{ py: 1.5 }}>{tx.transactionId || 'N/A'}</TableCell>
-              <TableCell sx={{ py: 1.5, fontFamily: 'monospace' }}>{tx.transactionReferenceNumber}</TableCell>
-              <TableCell sx={{ py: 1.5 }}>{tx.type.replace(/_/g, ' ')}</TableCell>
-              <TableCell sx={{ py: 1.5 }}>₹{parseFloat(tx.amount).toFixed(2)}</TableCell>
-              <TableCell sx={{ py: 1.5 }}>₹{parseFloat(tx.closingBalance).toFixed(2)}</TableCell>
-              <TableCell sx={{ py: 1.5 }}>{tx.doneBy}</TableCell>
-              <TableCell sx={{ py: 1.5 }}>{tx.userId}</TableCell>
-              <TableCell sx={{ py: 1.5 }}>{new Date(Number(tx.timestamp)).toLocaleString()}</TableCell>
-              <TableCell sx={{ py: 1.5 }}>
-                <Chip
-                  label={tx.status}
-                  color={tx.status === 'SUCCESS' ? 'success' : 'error'}
-                  size="small"
-                  sx={{ fontWeight: 'medium' }}
-                  aria-label={`Transaction status: ${tx.status}`}
-                />
+              <TableCell
+                sx={{
+                  py: 2,
+                  px: 3,
+                  fontFamily: 'monospace',
+                  fontSize: '0.9rem',
+                  borderRight: '1px solid rgba(0,0,0,0.05)',
+                }}
+              >
+                {tx.fromAccount}
+              </TableCell>
+              <TableCell
+                sx={{
+                  py: 2,
+                  px: 3,
+                  fontFamily: 'monospace',
+                  fontSize: '0.9rem',
+                  borderRight: '1px solid rgba(0,0,0,0.05)',
+                }}
+              >
+                {tx.toAccount}
+              </TableCell>
+              <TableCell
+                sx={{
+                  py: 2,
+                  px: 3,
+                  color: tx.type === 'Debit' ? '#ef4444' : '#22c55e',
+                  fontWeight: 'medium',
+                  fontSize: '0.9rem',
+                  borderRight: '1px solid rgba(0,0,0,0.05)',
+                }}
+                align="right"
+              >
+                ₹{parseFloat(tx.amount).toFixed(2)}
+              </TableCell>
+              <TableCell
+                sx={{
+                  py: 2,
+                  px: 3,
+                  fontSize: '0.9rem',
+                  borderRight: '1px solid rgba(0,0,0,0.05)',
+                }}
+              >
+                {tx.type}
+              </TableCell>
+              <TableCell
+                sx={{
+                  py: 2,
+                  px: 3,
+                  fontSize: '0.9rem',
+                }}
+              >
+                {format(Number(tx.timestamp), 'dd/MM/yyyy, HH:mm')}
               </TableCell>
             </TableRow>
           ))}

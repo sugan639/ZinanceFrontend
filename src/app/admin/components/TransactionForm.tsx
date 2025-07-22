@@ -44,7 +44,7 @@ export default function TransactionForm({
 }: Props) {
   return (
     <div className="flex justify-center items-center h-auto">
-      <div className="p-6 bg-white rounded shadow-md w-full max-w-md">
+      <div className="p-6 bg-white rounded shadow-md w-full max-w-md ">
         <h2 className="text-lg font-semibold mb-4 text-blue-800">
           {type === 'DEPOSIT' && 'Deposit Money'}
           {type === 'WITHDRAW' && 'Withdraw Money'}
@@ -63,6 +63,7 @@ export default function TransactionForm({
                 placeholder="Sender account number"
               />
             </div>
+
 
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700">To Account</label>
@@ -85,6 +86,10 @@ export default function TransactionForm({
                 placeholder="Enter amount"
               />
             </div>
+
+
+
+
 
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700">Transaction Type</label>

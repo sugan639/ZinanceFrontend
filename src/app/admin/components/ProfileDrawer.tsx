@@ -120,7 +120,8 @@ export default function ProfileDrawer({ user, visible, setVisible }: Props) {
         </button>
 
         <div>
-          <div className="flex items-center justify-center mb-6">
+          {/* Avatar + Logout */}
+          <div className="flex flex-col items-center justify-center mb-4">
             <div className="relative h-20 w-20">
               <div className="h-full w-full rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 p-1 shadow-lg">
                 <div className="h-full w-full rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-2xl shadow-inner transition-transform duration-300 hover:scale-110 hover:shadow-xl">
@@ -128,17 +129,35 @@ export default function ProfileDrawer({ user, visible, setVisible }: Props) {
                 </div>
               </div>
             </div>
+
+            <button
+              onClick={handleLogout}
+              className="mt-4 flex items-center gap-2 px-5 py-3 text-red-500 text-base font-medium rounded-xl hover:text-red-800 transition-all duration-200 cursor-pointer"
+            >
+              <LogOut className="w-5 h-5" />
+              Sign Out
+            </button>
+
+            {logoutError && (
+              <p className="text-red-500 text-sm mt-2 text-center">{logoutError}</p>
+            )}
           </div>
 
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-blue-900">Welcome, {user.name}</h2>
+          {/* Header */}
+          <div className="flex items-center justify-between mb-4 px-2">
+            <h2 className="text-xl font-semibold text-blue-900">Profile</h2>
             {!isEditing && (
-              <button className="text-blue-500 hover:text-blue-700" onClick={() => setIsEditing(true)}>
+              <button
+                className="text-blue-500 hover:text-blue-700 cursor-pointer"
+                onClick={() => setIsEditing(true)}
+                title="Edit"
+              >
                 <Pencil className="w-5 h-5" />
               </button>
             )}
           </div>
 
+          {/* Info Fields */}
           <div className="space-y-3 text-gray-800 text-sm px-2">
             <p>
               <span className="font-medium text-gray-600">Employee ID:</span> {user.employeeId}
@@ -189,11 +208,12 @@ export default function ProfileDrawer({ user, visible, setVisible }: Props) {
             </p>
           </div>
 
+          {/* Save / Cancel Buttons */}
           {isEditing && (
             <div className="mt-4 flex justify-between">
               <button
                 onClick={handleSave}
-                className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition"
+                className="cursor-pointer bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition"
               >
                 Save
               </button>
@@ -207,25 +227,11 @@ export default function ProfileDrawer({ user, visible, setVisible }: Props) {
                     branchId: user.branchId,
                   });
                 }}
-                className="bg-gray-200 text-gray-800 py-2 px-4 rounded hover:bg-gray-300 transition"
+                className="cursor-pointer bg-gray-200 text-gray-800 py-2 px-4 rounded hover:bg-gray-300 transition"
               >
                 Cancel
               </button>
             </div>
-          )}
-        </div>
-
-        <div className='flex flex-col items-center'>
-         <button
-  onClick={handleLogout}
-  className="mt-8 flex items-center  gap-2 px-5 py-3 text-red-500 text-base font-medium rounded-xl  hover:text-red-800 transition-all duration-200 cursor-pointer"
->
-  <LogOut className="w-5 h-5" />
-  Sign out
-</button>
-
-          {logoutError && (
-            <p className="text-red-500 text-sm mt-2 text-center">{logoutError}</p>
           )}
         </div>
       </div>

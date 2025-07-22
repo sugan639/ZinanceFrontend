@@ -1,7 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import '@/app/employee/css/sidebar.css'; // Make sure this import exists
+import '@/app/employee/css/sidebar.css'; // Ensure styles are defined
+
+// MUI Icons
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import SearchIcon from '@mui/icons-material/Search';
+import CreditCardIcon from '@mui/icons-material/CreditCard';
+import GroupIcon from '@mui/icons-material/Group';
+
 
 export default function Sidebar() {
   return (
@@ -12,31 +20,35 @@ export default function Sidebar() {
       <nav>
         <ul>
           <li>
-            <Link href="/employee/dashboard">
-              <span className="icon">🏠</span> Home
+            <Link href="/employee/dashboard" className="nav-link gap-2">
+              <DashboardIcon className="icon" />
+              <span>Dashboard</span>
             </Link>
           </li>
           <li>
-            <Link href="/employee/moneyTransfer">
-              <span className="icon">🔁</span> Transfer
+            <Link href="/employee/moneyTransfer" className="nav-link gap-2">
+              <SwapHorizIcon className="icon" />
+              <span>Money Transfer</span>
             </Link>
           </li>
           <li>
-            <Link href="/employee/transactions">
-              <span className="icon">🔍</span> Transactions
+            <Link href="/employee/transactions" className="nav-link gap-2">
+              <SearchIcon className="icon" />
+              <span>Transactions</span>
             </Link>
           </li>
           <li>
-            <Link href="/employee/users">
-              <span className="icon">👥</span> Users
+            <Link href="/employee/users" className="nav-link gap-2">
+              <GroupIcon className="icon" />
+              <span>Users</span>
             </Link>
           </li>
           <li>
-            <Link href="/employee/accounts">
-              <span className="icon">💳 </span> Accounts
+            <Link href="/employee/accounts" className="nav-link gap-2">
+              <CreditCardIcon className="icon" />
+              <span>Accounts</span>
             </Link>
           </li>
-          
         </ul>
       </nav>
     </aside>

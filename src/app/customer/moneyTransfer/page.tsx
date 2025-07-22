@@ -30,6 +30,9 @@ export default function MoneyTransferPage() {
     debit_transaction: any;
   } | null>(null);
 
+
+
+  
   const receiptRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

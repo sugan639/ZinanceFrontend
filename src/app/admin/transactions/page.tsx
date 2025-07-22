@@ -1,4 +1,5 @@
 'use client';
+
 import React, { useState, useEffect } from 'react';
 import Sidebar from '@/app/admin/components/SideBar';
 import TopBar from '@/app/admin/components/TopBar';
@@ -9,9 +10,51 @@ import TransactionSearchForm from '@/app/admin/components/TransactionSearchForm'
 import ErrorMessage from '@/app/admin/components/ErrorMessage';
 import Loading from '../components/Loading';
 
+import {
+  TableContainer,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  Paper,
+  Button,
+  Typography,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Box,
+} from '@mui/material';
+import ReceiptIcon from '@mui/icons-material/Receipt';
+import EventIcon from '@mui/icons-material/Event';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
+import SearchIcon from '@mui/icons-material/Search';
+
+// Define types
+interface ApiTransaction {
+  transactionId: string | null;
+  type: string;
+  amount: string;
+  closingBalance: string;
+  doneBy: string;
+  userId: string;
+  timestamp: string;
+  status: string;
+  accountNumber: string;
+}
+
+// Union type for response shape
+type TransactionsResponse =
+  | { [accountNumber: string]: ApiTransaction[] } // grouped
+  | ApiTransaction[]; // flat array
+
 export default function FindTransactionsPage() {
   const [user, setUser] = useState<any>(null);
-  const [transactions, setTransactions] = useState<any>(null);
+  const [allTransactions, setAllTransactions] = useState<{ [key: string]: ApiTransaction[] } | null>(null);
+  const [selectedAccount, setSelectedAccount] = useState<string>('');
+  const [availableAccounts, setAvailableAccounts] = useState<string[]>([]);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -24,23 +67,51 @@ export default function FindTransactionsPage() {
     axios
       .get(ADMIN_PROFILE_URL, { withCredentials: true })
       .then((res) => setUser(res.data))
-      .catch(() => window.location.href = '/login')
+      .catch(() => (window.location.href = '/login'))
       .finally(() => setLoading(false));
   }, []);
 
   const fetchTransactions = async (params: any) => {
     setLoading(true);
     setMessage('');
-    setTransactions(null);
+    setAllTransactions(null);
+    setSelectedAccount('');
+    setAvailableAccounts([]);
     setError('');
 
     try {
       const response = await axios.post(FIND_TRANSACTIONS_URL, params, { withCredentials: true });
 
-      if (response.data.transactions) {
-        setTransactions(response.data.transactions);
-      } else {
+      if (!response.data.transactions || response.data.transactions.length === 0) {
         setMessage('No transactions found.');
+        return;
+      }
+
+      const rawData: TransactionsResponse = response.data.transactions;
+
+      let normalizedData: { [key: string]: ApiTransaction[] };
+
+      if (Array.isArray(rawData)) {
+        // Case 1: Flat array → group by accountNumber
+        normalizedData = {};
+        rawData.forEach((tx) => {
+          if (!normalizedData[tx.accountNumber]) {
+            normalizedData[tx.accountNumber] = [];
+          }
+          normalizedData[tx.accountNumber].push(tx);
+        });
+      } else {
+        // Case 2: Already grouped
+        normalizedData = rawData;
+      }
+
+      setAllTransactions(normalizedData);
+
+      const accounts = Object.keys(normalizedData);
+      setAvailableAccounts(accounts);
+
+      if (accounts.length > 0) {
+        setSelectedAccount(accounts[0]);
       }
     } catch (e: any) {
       const backendMsg = e?.response?.data?.error || e?.message || 'Unknown error';
@@ -64,82 +135,190 @@ export default function FindTransactionsPage() {
     fetchTransactions(newParams);
   };
 
+  const handleAccountChange = (event: any) => {
+    setSelectedAccount(event.target.value as string);
+  };
+
+  const handleResetForm = () => {
+  setAllTransactions(null);
+  setSelectedAccount('');
+  setAvailableAccounts([]);
+  setMessage('');
+  setError('');
+  setLastParams(null);
+  setCurrentOffset(0);
+};
+
+
   if (loading) return <Loading message="Loading transactions..." />;
   if (!user) return null;
+
+  const currentTxns = selectedAccount && allTransactions ? allTransactions[selectedAccount] : [];
 
   return (
     <>
       <Sidebar />
       <TopBar />
       <ProfileDrawer user={user} />
-      <main className="pl-64 pt-20 min-h-screen bg-gray-100 flex flex-col items-center">
-        <div className="w-full max-w-lg mt-6">
-          <TransactionSearchForm onSubmit={handleSearch} message={message} />
+
+      <main className="pl-64 pt-20 min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          {/* Header */}
+          <header className="mb-8 text-center">
+            <Typography variant="h4" component="h1" className="text-3xl font-bold text-gray-800 flex items-center justify-center gap-2">
+              <ReceiptIcon /> Transaction History
+            </Typography>
+            <Typography variant="subtitle1" className="text-gray-600 mt-2">
+              Search and manage customer transactions
+            </Typography>
+          </header>
+
+          {/* Search Form */}
+          <section className="bg-white shadow-lg rounded-xl p-6 mb-8 transition-all duration-300 hover:shadow-xl">
+            <Typography variant="h6" className="text-xl font-semibold text-gray-700 mb-4 flex items-center gap-2">
+              <SearchIcon /> Search Transactions
+            </Typography>
+            <TransactionSearchForm onSubmit={handleSearch} onReset={handleResetForm} message={message} />
+            {error && <ErrorMessage message={error} onClose={() => setError('')} />}
+          </section>
+
+          {/* Results Section */}
+          {allTransactions && (
+            <section className="bg-white shadow-lg rounded-xl p-6 transition-all duration-300 hover:shadow-xl">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
+                <Typography variant="h6" className="font-semibold text-gray-700">
+                  Select Account
+                </Typography>
+                <FormControl size="small" sx={{ minWidth: 200 }}>
+                  <InputLabel>Account Number</InputLabel>
+                  <Select
+                    value={selectedAccount}
+                    label="Account Number"
+                    onChange={handleAccountChange}
+                    slotProps={{
+                      input: { sx: { borderRadius: '8px' } },
+                    }}
+                  >
+                    {availableAccounts.map((acc) => (
+                      <MenuItem key={acc} value={acc}>
+                        {acc}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </div>
+
+              {currentTxns.length > 0 ? (
+                <TransactionTable transactions={currentTxns} />
+              ) : (
+                <p className="text-center text-gray-500 py-4">No transactions for this account.</p>
+              )}
+
+              {/* Pagination */}
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  disabled={currentOffset === 0}
+                  onClick={() => handlePageChange(Math.max(0, currentOffset - LIMIT))}
+                  sx={{ borderRadius: '8px' }}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => handlePageChange(currentOffset + LIMIT)}
+                  sx={{ borderRadius: '8px' }}
+                >
+                  Next
+                </Button>
+              </Box>
+            </section>
+          )}
         </div>
-
-        {error && <ErrorMessage message={error} onClose={() => setError('')} />}
-
-        {transactions && (
-          <div className="mt-8 w-full max-w-6xl overflow-auto bg-white rounded shadow p-4">
-            {Array.isArray(transactions) ? (
-              <TransactionTable transactions={transactions} />
-            ) : (
-              Object.entries(transactions).map(([acct, txList]: any) => (
-                <div key={acct} className="mb-6">
-                  <h3 className="font-semibold mb-2 text-gray-800">Account: {acct}</h3>
-                  <TransactionTable transactions={txList} />
-                </div>
-              ))
-            )}
-
-            <div className="flex justify-between mt-4">
-              <button
-                onClick={() => handlePageChange(Math.max(0, currentOffset - LIMIT))}
-                disabled={currentOffset === 0}
-                className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
-              >
-                Previous
-              </button>
-              <button
-                onClick={() => handlePageChange(currentOffset + LIMIT)}
-                disabled={!transactions || (Array.isArray(transactions) && transactions.length < LIMIT)}
-                className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        )}
       </main>
     </>
   );
 }
 
-function TransactionTable({ transactions }: { transactions: any[] }) {
+// Transaction Table Component
+function TransactionTable({ transactions }: { transactions: ApiTransaction[] }) {
   return (
-    <table className="w-full text-sm border border-gray-500 rounded overflow-hidden">
-      <thead className="bg-blue-700 text-white">
-        <tr>
-          {['Txn ID', 'Ref No', 'Type', 'Amount', 'Balance', 'By', 'UID', 'Timestamp', 'Status'].map(h => (
-            <th key={h} className="px-3 py-2 border border-gray-500 font-semibold">{h}</th>
+    <TableContainer
+      component={Paper}
+      sx={{
+        borderRadius: '12px',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+        overflow: 'hidden',
+      }}
+    >
+      <Table stickyHeader aria-label="transaction table">
+        <TableHead>
+          <TableRow>
+            {['Txn ID', 'Type', 'Amount', 'Balance', 'Done By', 'User ID', 'Timestamp', 'Status'].map((header) => (
+              <TableCell
+                key={header}
+                sx={{
+                  fontWeight: 'bold',
+                  backgroundColor: '#1976d2',
+                  color: 'white',
+                  py: 1.5,
+                  fontSize: '0.875rem',
+                }}
+              >
+                {header}
+              </TableCell>
+            ))}
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {transactions.map((tx, idx) => (
+            <TableRow
+              key={tx.transactionId || `${idx}`}
+              hover
+              sx={{
+                '&:nth-of-type(odd)': { backgroundColor: '#f9f9f9' },
+                '&:hover': { backgroundColor: '#f0f8ff !important' },
+              }}
+            >
+              <TableCell sx={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>
+                {tx.transactionId || 'N/A'}
+              </TableCell>
+              <TableCell>{tx.type.replace(/_/g, ' ')}</TableCell>
+              <TableCell
+                sx={{
+                  fontWeight: 'medium',
+                  color:
+                    tx.type.includes('DEBIT') || tx.type === 'WITHDRAWAL'
+                      ? '#d32f2f'
+                      : '#2e7d32',
+                }}
+              >
+                ₹{parseFloat(tx.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+              </TableCell>
+              <TableCell>₹{parseFloat(tx.closingBalance).toFixed(2)}</TableCell>
+              <TableCell>{tx.doneBy}</TableCell>
+              <TableCell>{tx.userId}</TableCell>
+              <TableCell sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>
+                {new Date(Number(tx.timestamp)).toLocaleString()}
+              </TableCell>
+              <TableCell>
+                <span
+                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                    tx.status === 'SUCCESS'
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-red-100 text-red-700'
+                  }`}
+                >
+                  {tx.status === 'SUCCESS' ? <CheckCircleIcon fontSize="small" /> : <CancelIcon fontSize="small" />}
+                  {tx.status}
+                </span>
+              </TableCell>
+            </TableRow>
           ))}
-        </tr>
-      </thead>
-      <tbody>
-        {transactions.map((tx, idx) => (
-          <tr key={tx.transactionId} className={idx % 2 === 0 ? "bg-white" : "bg-blue-50"}>
-            <td className="px-3 py-2 border border-gray-300 text-gray-900">{tx.transactionId}</td>
-            <td className="px-3 py-2 border border-gray-300 text-gray-900">{tx.transactionReferenceNumber}</td>
-            <td className="px-3 py-2 border border-gray-300 text-gray-900">{tx.type}</td>
-            <td className="px-3 py-2 border border-gray-300 text-gray-900">{tx.amount}</td>
-            <td className="px-3 py-2 border border-gray-300 text-gray-900">{tx.closingBalance}</td>
-            <td className="px-3 py-2 border border-gray-300 text-gray-900">{tx.doneBy}</td>
-            <td className="px-3 py-2 border border-gray-300 text-gray-900">{tx.userId}</td>
-            <td className="px-3 py-2 border border-gray-300 text-gray-900">{new Date(tx.timestamp).toLocaleString()}</td>
-            <td className="px-3 py-2 border border-gray-300 text-gray-900">{tx.status}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 }
