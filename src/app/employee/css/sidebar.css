@@ -1,57 +1,125 @@
-/* /app/css/sidebar.css */
-
+/* Modern Sidebar with Active Page Highlight */
 .sidebar {
-  width: 240px;
-  background-color: #ADD8E6; /* Light Blue */
-  color: #1e3a8a; /* Darker text for contrast */
+  width: 260px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  color: #1e3a8a;
   height: 100vh;
   position: fixed;
   top: 0;
   left: 0;
-  padding: 1.5rem 1.25rem;
+  padding: 1.75rem 1.5rem;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 4px 0 16px rgba(0, 0, 0, 0.1);
+  border-right: 1px solid #bae6fd;
+  z-index: 50;
+  transition: all 0.3s ease;
+}
+
+.sidebar:hover {
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.14);
 }
 
 .sidebar .logo h2 {
-  font-size: 1.8rem;
-  font-weight: 700;
+  font-size: 1.875rem;
+  font-weight: 800;
   margin-bottom: 2.5rem;
   text-align: center;
-  color: #1e3a8a;
+  color: #0369a1;
   letter-spacing: 1px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .sidebar nav ul {
   list-style: none;
   padding: 0;
   margin: 0;
+  flex: 1;
 }
 
 .sidebar nav ul li {
-  margin-bottom: 1.2rem;
+  margin-bottom: 0.5rem;
 }
 
 .sidebar nav ul li a {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.9rem 1.2rem;
+  border-radius: 14px;
   color: #1e3a8a;
   text-decoration: none;
   font-size: 1.05rem;
-  display: flex;
-  align-items: center;
-  padding: 0.6rem 1rem;
-  border-radius: 0.5rem;
-  transition: background-color 0.25s ease, transform 0.2s ease;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
 }
 
-.sidebar nav ul li a:hover {
-  background-color: #3b82f6;
-  color: #ffffff;
-  transform: translateX(5px);
+.sidebar nav ul li a .icon {
+  font-size: 1.35rem;
+  transition: all 0.3s ease;
 }
 
-.sidebar nav ul li a span.icon {
-  margin-right: 0.75rem;
-  font-size: 1.25rem;
+/* Hover Effect */
+.sidebar nav ul li a:hover:not(.active-link) {
+  background: #0284c7;
+  color: white;
+  transform: translateX(4px);
+}
+
+.sidebar nav ul li a:hover:not(.active-link) .icon {
+  transform: scale(1.2);
+  color: white;
+}
+
+/* ACTIVE LINK STYLES - YOU ARE HERE! */
+.sidebar nav ul li a.active-link {
+  background: linear-gradient(90deg, #0284c7, #0891b2);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 6px 12px rgba(2, 132, 199, 0.25);
+  transform: translateX(0) !important;
+  border-left: 3px solid white;
+}
+
+.sidebar nav ul li a.active-link .icon {
+  color: white !important;
+}
+
+.sidebar nav ul li a.active-link:hover {
+  background: linear-gradient(90deg, #0284c7, #0891b2);
+}
+
+/* Pulse Dot for Active Page */
+.sidebar nav ul li a.active-link::before {
+  content: '';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  background-color: white;
+  border-radius: 50%;
+  box-shadow: 0 0 12px 4px rgba(255, 255, 255, 0.6);
+  animation: pulse 1.8s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(255, 255, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+  }
+}
+
+/* Smooth transitions */
+.sidebar nav ul li a,
+.sidebar nav ul li a .icon {
+  transition: all 0.3s ease;
 }

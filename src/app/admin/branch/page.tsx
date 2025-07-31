@@ -163,12 +163,10 @@ export default function BranchPage() {
 
   return (
     <>
-      <Sidebar />
       <div className="flex-1">
-        <TopBar />
-        <ProfileDrawer user={user} />
+      
 
-        <main className="pl-64 pt-20 p-6 space-y-8 bg-gray-50 min-h-screen">
+        <main className=" pt-20 p-6 space-y-8 bg-gray-50 ">
           {/* Header */}
           <Box sx={{ textAlign: 'center', mb: 6 }}>
             <Typography variant="h4" component="h1" className="text-3xl font-bold text-gray-800 flex items-center justify-center gap-2">

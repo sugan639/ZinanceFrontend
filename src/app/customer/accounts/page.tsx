@@ -31,7 +31,9 @@ import {
   IconButton,
   Chip,
   TablePagination,
+  Tooltip,
 } from '@mui/material';
+import DataTable from '@/app/common/components/DataTable';
 
 interface Account {
   account_number: string;
@@ -110,16 +112,13 @@ export default function AccountManagement() {
     setSelectedAccount(null);
   };
 
-  if (loading) return <Loading message="Loading account management..." />;
   if (!user) return null;
 
   return (
     <>
-      <Sidebar />
-      <TopBar user={user} />
-      {user && <ProfileDrawer user={user} />}
+  
 
-      <main className="pl-64 pt-20 bg-gray-50 min-h-screen p-6">
+      <main className=" bg-gray-50 p-6">
         <div className="max-w-6xl mx-auto">
           <header className="mb-6 text-center">
             <h1 className="text-3xl font-bold text-gray-800">Account Management</h1>
@@ -127,7 +126,6 @@ export default function AccountManagement() {
           </header>
 
           <section className="bg-white shadow-md rounded-xl p-6">
-            <h2 className="text-xl font-semibold text-gray-700 mb-4">Your Accounts</h2>
 
             {accounts.length === 0 ? (
               <p className="text-gray-500 py-4 text-center">No accounts found</p>
@@ -136,55 +134,62 @@ export default function AccountManagement() {
                 component={Paper}
                 sx={{ borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
               >
-                <Table aria-label="account table">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell className="font-semibold">Account Number</TableCell>
-                      <TableCell className="font-semibold">Balance</TableCell>
-                      <TableCell className="font-semibold">Status</TableCell>
-                      <TableCell className="font-semibold">Created At</TableCell>
-                      <TableCell align="center" className="font-semibold">Details</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {accounts.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((acc, index) => (
-                      <TableRow
-                        key={acc.account_number}
-                        sx={{
-                          '&:hover': { backgroundColor: '#f5f5f5' },
-                        }}
-                      >
-                        <TableCell>{acc.account_number}</TableCell>
-                        <TableCell>₹{parseFloat(acc.balance).toFixed(2)}</TableCell>
-                        <TableCell>
-                          <Chip
-                            label={acc.status}
-                            color={acc.status === 'ACTIVE' ? 'success' : 'error'}
-                            size="small"
-                            sx={{ color: '#fff', fontWeight: 500 }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          {new Date(Number(acc.created_at)).toLocaleString('en-IN')}
-                        </TableCell>
-                        <TableCell align="center">
-                          <IconButton onClick={() => openModal(acc)} size="small" color="primary">
-                            <InfoIcon fontSize="small" />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-                <TablePagination
-                  rowsPerPageOptions={[5, 10, 25]}
-                  component="div"
-                  count={accounts.length}
-                  rowsPerPage={rowsPerPage}
-                  page={page}
-                  onPageChange={handleChangePage}
-                  onRowsPerPageChange={handleChangeRowsPerPage}
-                />
+
+                
+<DataTable
+  title="Your Accounts"
+  columns={[
+    {
+      key: 'account_number',
+      label: 'Account Number',
+    },
+    {
+      key: 'balance',
+      label: 'Balance',
+      format: (value) => `₹${parseFloat(value).toFixed(2)}`,
+    },
+   {
+  key: 'status',
+  label: 'Status',
+  align: 'center',
+  render: (row) => {
+    const isActive = row.status === 'ACTIVE';
+    return (
+      <span
+        className={`text-sm font-medium ${
+          isActive
+            ? 'text-green-700'  // Rich, professional green
+            : 'text-amber-600' // Warm amber for INACTIVE
+        }`}
+      >
+        {row.status}
+      </span>
+    );
+  },
+},
+    {
+      key: 'created_at',
+      label: 'Created At',
+      format: (value) => new Date(Number(value)).toLocaleString('en-IN'),
+    },
+  ]}
+  actionColumn={{
+    header: 'Details',
+    render: (row) => (
+      <Tooltip title="View Details">
+        <IconButton onClick={() => openModal(row)} size="small" color="primary">
+          <InfoIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+    ),
+  }}
+  data={accounts}
+  noDataMessage="No accounts found."
+  onRowClick={(row) => openModal(row)}
+/>
+
+
+          
               </TableContainer>
             )}
           </section>
@@ -205,60 +210,57 @@ export default function AccountManagement() {
               p: 4,
             }}
           >
-            <div className="flex justify-between items-center mb-4 text-gray-600">
-              <Typography variant="h6" component="h2">
-                Account Details
+            <div className="flex justify-between items-center mb-4 text-black">
+              <Typography variant="h6" component="h2" className='text-green'>
+                ------------- Account Details -------------
               </Typography>
-              <IconButton onClick={closeModal} size="small">
-                <CloseIcon fontSize="small" />
-              </IconButton>
+             
             </div>
 
-            {selectedAccount && (
-              <div className="space-y-3 text-sm text-gray-800">
-                <p>
-                  <strong className="text-gray-600">Account Number:</strong>{' '}
-                  <span className="font-medium">{selectedAccount.account_number}</span>
-                </p>
-                <p>
-                  <strong className="text-gray-600">Balance:</strong>{' '}
-                  <span className="font-medium">₹{parseFloat(selectedAccount.balance).toFixed(2)}</span>
-                </p>
-                <p>
-                  <strong className="text-gray-600">Status:</strong>{' '}
-                  <Chip
-                    label={selectedAccount.status}
-                    color={selectedAccount.status === 'ACTIVE' ? 'success' : 'error'}
-                    size="small"
-                    sx={{ color: '#fff', fontWeight: 500 }}
-                  />
-                </p>
-                <p>
-                  <strong className="text-gray-600">Branch ID:</strong>{' '}
-                  <span className="font-medium">{selectedAccount.branch_id}</span>
-                </p>
-                <p>
-                  <strong className="text-gray-600">Created At:</strong>{' '}
-                  <span className="font-medium">
-                    {new Date(Number(selectedAccount.created_at)).toLocaleString('en-IN')}
-                  </span>
-                </p>
-                <p>
-                  <strong className="text-gray-600">Last Updated:</strong>{' '}
-                  <span className="font-medium">
-                    {new Date(Number(selectedAccount.modified_at)).toLocaleString('en-IN')}
-                  </span>
-                </p>
-                <p>
-                  <strong className="text-gray-600">Modified By:</strong>{' '}
-                  <span className="font-medium">{selectedAccount.modified_by || 'System'}</span>
-                </p>
-                <p>
-                  <strong className="text-gray-600">User ID:</strong>{' '}
-                  <span className="font-medium">{selectedAccount.user_id}</span>
-                </p>
-              </div>
-            )}
+
+
+{/* Account info card */}
+{selectedAccount && (
+  <div className="space-y-3 text-sm text-gray-800">
+    <p className="flex justify-between">
+      <span className="font-medium">Account Number:</span>
+      <strong className="text-gray-600">{selectedAccount.account_number}</strong>
+    </p>
+    <p className="flex justify-between">
+      <span className="font-medium">Balance:</span>
+      <strong className="text-gray-600">₹{parseFloat(selectedAccount.balance).toFixed(2)}</strong>
+    </p>
+    <p className="flex justify-between">
+      <span className="font-medium">Status:</span>
+      <strong className="text-gray-600">{selectedAccount.status}</strong>
+    </p>
+    <p className="flex justify-between">
+      <span className="font-medium">Branch ID:</span>
+      <strong className="text-gray-600">{selectedAccount.branch_id}</strong>
+    </p>
+    <p className="flex justify-between">
+      <span className="font-medium">Created At:</span>
+      <strong className="text-gray-600">
+        {new Date(Number(selectedAccount.created_at)).toLocaleString('en-IN')}
+      </strong>
+    </p>
+    <p className="flex justify-between">
+      <span className="font-medium">Last Updated:</span>
+      <strong className="text-gray-600">
+        {new Date(Number(selectedAccount.modified_at)).toLocaleString('en-IN')}
+      </strong>
+    </p>
+    <p className="flex justify-between">
+      <span className="font-medium">Modified By:</span>
+      <strong className="text-gray-600">{selectedAccount.modified_by || 'System'}</strong>
+    </p>
+    <p className="flex justify-between">
+      <span className="font-medium">User ID:</span>
+      <strong className="text-gray-600">{selectedAccount.user_id}</strong>
+    </p>
+  </div>
+)}
+
 
            
           </Box>
@@ -273,3 +275,9 @@ export default function AccountManagement() {
     </>
   );
 }
+
+
+
+
+
+

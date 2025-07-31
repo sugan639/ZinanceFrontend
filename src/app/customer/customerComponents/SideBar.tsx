@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import Image from 'next/image';
 
-
-import '@/app/customer/css/sidebar.css'; // Ensure styles are defined
 
 // MUI Icons
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -12,37 +12,65 @@ import SearchIcon from '@mui/icons-material/Search';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
 
 export default function Sidebar() {
+  const pathname = usePathname();
+
+  const navItems = [
+  { href: '/customer/dashboard', icon: <DashboardIcon className="nav-icon" />, label: 'Dashboard' },
+  { 
+    href: '/customer/moneyTransfer',
+    icon: (
+      <Image
+        src="/money.png"
+        alt="Transfer"
+        width={24}
+        height={24}
+        className="nav-icon"
+      />
+    ),
+     label: 'Transfer' },
+
+  {
+    href: '/customer/transactions',
+    icon: (
+      <Image
+        src="/findTransaction.png"
+        alt="Transactions"
+        width={24}
+        height={24}
+        className="nav-icon"
+      />
+    ),
+    label: 'Transactions',
+  },
+    {
+    href: '/customer/accounts',
+    icon: (
+      <Image
+        src="/bank-account.png"
+        alt="Accounts"
+        width={24}
+        height={24}
+        className="nav-icon"
+      />
+    ),
+    label: 'Accounts',
+  },
+];
+
+
+
   return (
     <aside className="sidebar">
-      <div className="logo">
-        <h2>Zinance</h2>
-      </div>
       <nav>
         <ul>
-          <li>
-            <Link href="/customer/dashboard" className="nav-link gap-2">
-              <DashboardIcon className="icon" />
-              <span>Dashboard</span>
-            </Link>
-          </li>
-          <li>
-            <Link href="/customer/moneyTransfer" className="nav-link gap-2">
-              <SwapHorizIcon className="icon" />
-              <span>Transfer Money</span>
-            </Link>
-          </li>
-          <li>
-            <Link href="/customer/transactions" className="nav-link gap-2">
-              <SearchIcon className="icon" />
-              <span>Find Transactions</span>
-            </Link>
-          </li>
-          <li>
-            <Link href="/customer/accounts" className="nav-link gap-2">
-              <CreditCardIcon className="icon" />
-              <span>Accounts</span>
-            </Link>
-          </li>
+          {navItems.map(({ href, icon, label }) => (
+            <li key={href}>
+              <Link href={href} className={`nav-link ${pathname.startsWith(href) ? 'active' : ''}`}>
+                {icon}
+                <span>{label}</span>
+              </Link>
+            </li>
+          ))}
         </ul>
       </nav>
     </aside>

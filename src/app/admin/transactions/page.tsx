@@ -157,11 +157,8 @@ export default function FindTransactionsPage() {
 
   return (
     <>
-      <Sidebar />
-      <TopBar />
-      <ProfileDrawer user={user} />
 
-      <main className="pl-64 pt-20 min-h-screen bg-gray-50">
+
         <div className="max-w-7xl mx-auto px-6 py-8">
           {/* Header */}
           <header className="mb-8 text-center">
@@ -176,7 +173,7 @@ export default function FindTransactionsPage() {
           {/* Search Form */}
           <section className="bg-white shadow-lg rounded-xl p-6 mb-8 transition-all duration-300 hover:shadow-xl">
             <Typography variant="h6" className="text-xl font-semibold text-gray-700 mb-4 flex items-center gap-2">
-              <SearchIcon /> Search Transactions
+           Search Transactions
             </Typography>
             <TransactionSearchForm onSubmit={handleSearch} onReset={handleResetForm} message={message} />
             {error && <ErrorMessage message={error} onClose={() => setError('')} />}
@@ -237,7 +234,6 @@ export default function FindTransactionsPage() {
             </section>
           )}
         </div>
-      </main>
     </>
   );
 }

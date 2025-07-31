@@ -130,11 +130,7 @@ export default function UserManagementPage() {
 
   return (
     <>
-      <Sidebar />
-      <TopBar />
-      {user && <ProfileDrawer user={user} />}
 
-      <main className="pl-64 pt-20 bg-gray-50 min-h-screen p-6">
         <div className="max-w-5xl mx-auto">
           {/* Header */}
           <Box sx={{ textAlign: 'center', mb: 6 }}>
@@ -186,7 +182,7 @@ export default function UserManagementPage() {
               {tab === 'createCustomer' && (
                 <Box component="form" noValidate autoComplete="off">
                   <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2', mb: 3 }}>
-                    <EditIcon fontSize="small" /> New Customer
+                    <EditIcon fontSize="small" />  Customer Data
                   </Typography>
                   <Grid container spacing={3}>
                     <Grid xs={12} sm={6}>
@@ -333,7 +329,7 @@ export default function UserManagementPage() {
               {tab === 'createEmployee' && (
                 <Box component="form" noValidate autoComplete="off">
                   <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2', mb: 3 }}>
-                    <EditIcon fontSize="small" /> New Employee / Admin
+                    New Employee / Admin
                   </Typography>
                   <Grid container spacing={3}>
                     <Grid xs={12} sm={6}>
@@ -389,31 +385,36 @@ export default function UserManagementPage() {
                     </Grid>
                     <Grid xs={12}>
                    
-                            <FormControl fullWidth size="small">
-                        <InputLabel>Role</InputLabel>
-                        <Select
-                          value={form.role || ''}
-                          onChange={(e) => setForm({ ...form, role: e.target.value })}
-                          label="Role"
-                          sx={{ 
-                            borderRadius: '8px',
-                            '& .MuiSelect-select': { 
-                              paddingTop: '16px',
-                              paddingBottom: '16px',
-                              paddingLeft: '14px',
-                              paddingRight: '32px',
-                              textAlign: 'left'
-                            },
-                            '& .MuiOutlinedInput-root': {
-                              borderRadius: '8px'
-                            }
-                          }}
-                        >
-                          <MenuItem value="">Select Role</MenuItem>
-                          <MenuItem value="EMPLOYEE">Employee</MenuItem>
-                          <MenuItem value="ADMIN">Admin</MenuItem>
-                        </Select>
-                      </FormControl>
+                           <FormControl
+  fullWidth
+  size="small"
+  sx={{ width: '220px', minHeight: '50px'}} // <-- Adjust width as needed
+>
+  <InputLabel>Role</InputLabel>
+  <Select
+    value={form.role || ''}
+    onChange={(e) => setForm({ ...form, role: e.target.value })}
+    label="Role"
+    sx={{ 
+      borderRadius: '8px',
+      '& .MuiSelect-select': { 
+        paddingTop: '16px',
+        paddingBottom: '16px',
+        paddingLeft: '14px',
+        paddingRight: '32px',
+        textAlign: 'left'
+      },
+      '& .MuiOutlinedInput-root': {
+        borderRadius: '8px'
+      }
+    }}
+  >
+    <MenuItem value="">Select Role</MenuItem>
+    <MenuItem value="EMPLOYEE">Employee</MenuItem>
+    <MenuItem value="ADMIN">Admin</MenuItem>
+  </Select>
+</FormControl>
+
                     </Grid>
                   </Grid>
 
@@ -460,7 +461,7 @@ export default function UserManagementPage() {
               {tab === 'getUser' && (
                 <Box component="form" noValidate autoComplete="off">
                   <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2', mb: 3 }}>
-                    <SearchIcon fontSize="small" /> Fetch User Details
+                    Fetch User Details
                   </Typography>
                   <Grid container spacing={3}>
                     <Grid xs={12} sm={8}>
@@ -599,7 +600,6 @@ export default function UserManagementPage() {
             </CardContent>
           </Card>
         </div>
-      </main>
     </>
   );
 }

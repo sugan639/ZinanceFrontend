@@ -3,11 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-
 import Sidebar from '@/app/admin/components/SideBar';
 import TopBar from '@/app/admin/components/TopBar';
 import ProfileDrawer from '@/app/admin/components/ProfileDrawer';
-
 import {
   ADMIN_PROFILE_URL,
   CREATE_NEW_ACCOUNT_URL,
@@ -33,24 +31,22 @@ import {
   Card,
   CardContent,
   Alert,
+  AlertTitle,
   Divider,
+  Skeleton,
 } from '@mui/material';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
-import EditIcon from '@mui/icons-material/Edit';
 
-export default function AccountManagement() {
+export default function AccountsPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
-
+  const [loading, setLoading] = useState(true);
   const [customerId, setCustomerId] = useState('');
   const [accounts, setAccounts] = useState<any[]>([]);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-
   const [newAccountForm, setNewAccountForm] = useState({
     user_id: '',
     branch_id: '',
@@ -74,27 +70,27 @@ export default function AccountManagement() {
     }
 
     try {
-      const res = await axios.get(`${GET_ACCOUNTS_URL}${customerId}`, { withCredentials: true });
-      const normalized = (res.data.accounts || []).map((acc: any) => ({
-        account_number: acc.accountNumber || acc.account_number,
-        balance: acc.balance,
-        status: acc.status,
-        created_at: acc.createdAt || acc.created_at,
-      }));
-      setAccounts(normalized);
-      setMessage(`Found ${normalized.length} account(s).`);
+      const res = await axios.get(`${GET_ACCOUNTS_URL}${customerId}`, {
+        withCredentials: true,
+      });
+      setAccounts(Array.isArray(res.data.accounts) ? res.data.accounts : []);
     } catch (err: any) {
       setError(err?.response?.data?.error || 'Failed to fetch accounts');
       setAccounts([]);
     }
   };
 
-  const handleStatusChange = async (account_number: number, operation: 'ACTIVATE' | 'DEACTIVATE') => {
+  const handleStatusChange = async (
+    account_number: number,
+    operation: 'ACTIVATE' | 'DEACTIVATE'
+  ) => {
     setError('');
     setMessage('');
     try {
       const payload = { account_number, operation };
-      const res = await axios.post(UPDATE_ACCOUNT_STATUS_URL, payload, { withCredentials: true });
+      const res = await axios.post(UPDATE_ACCOUNT_STATUS_URL, payload, {
+        withCredentials: true,
+      });
       setMessage(res.data.message || `Account ${operation.toLowerCase()}d successfully.`);
       fetchAccounts(); // Refresh list
     } catch (err: any) {
@@ -118,8 +114,9 @@ export default function AccountManagement() {
         branch_id: Number(branch_id),
         balance: Number(balance),
       };
-
-      const res = await axios.post(CREATE_NEW_ACCOUNT_URL, payload, { withCredentials: true });
+      const res = await axios.post(CREATE_NEW_ACCOUNT_URL, payload, {
+        withCredentials: true,
+      });
       setMessage(res.data.message || 'New account created successfully!');
       setNewAccountForm({ user_id: '', branch_id: '', balance: '' });
       if (customerId) fetchAccounts(); // Refresh if viewing same customer
@@ -128,15 +125,10 @@ export default function AccountManagement() {
     }
   };
 
-  if (loading) {
-    return <Loading message="Loading account management..." />;
-  }
 
   return (
     <>
-      <Sidebar />
-      <TopBar />
-      {user && <ProfileDrawer user={user} />}
+ 
 
       <main className="pl-64 pt-20 bg-gray-50 min-h-screen p-6">
         <div className="max-w-6xl mx-auto space-y-8">
@@ -150,14 +142,16 @@ export default function AccountManagement() {
             </Typography>
           </Box>
 
-          {/* Success & Error Messages */}
+          {/* Messages */}
           {message && (
             <Alert severity="success" icon={<CheckCircleIcon />} sx={{ mb: 3 }}>
+              <AlertTitle>Success</AlertTitle>
               {message}
             </Alert>
           )}
           {error && (
             <Alert severity="error" icon={<CancelIcon />} sx={{ mb: 3 }}>
+              <AlertTitle>Error</AlertTitle>
               {error}
             </Alert>
           )}
@@ -166,7 +160,7 @@ export default function AccountManagement() {
           <Card elevation={3} sx={{ borderRadius: 2, overflow: 'hidden' }}>
             <CardContent>
               <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2', mb: 3 }}>
-                🔍 Get Accounts by Customer ID
+                Fetch Accounts by Customer ID
               </Typography>
               <Grid container spacing={2} alignItems="center">
                 <Grid item xs={12} sm={8}>
@@ -176,7 +170,6 @@ export default function AccountManagement() {
                     placeholder="Enter customer ID"
                     value={customerId}
                     onChange={(e) => setCustomerId(e.target.value)}
-                    type="number"
                     variant="outlined"
                     size="small"
                     sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
@@ -189,10 +182,9 @@ export default function AccountManagement() {
                     color="primary"
                     onClick={fetchAccounts}
                     size="large"
-                    startIcon={<EditIcon />}
                     sx={{ height: '100%', borderRadius: '8px' }}
                   >
-                    Fetch
+                    Fetch Accounts
                   </Button>
                 </Grid>
               </Grid>
@@ -200,16 +192,18 @@ export default function AccountManagement() {
           </Card>
 
           {/* Accounts Table */}
-          {accounts.length > 0 && (
-            <Card elevation={3} sx={{ borderRadius: 2 }}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2' }}>
-                  📋 Account List
-                </Typography>
+          <Card elevation={3} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2', mb: 3 }}>
+                Account List
+              </Typography>
+
+              {/* ✅ Conditional Rendering to Prevent Flicker */}
+              {accounts.length > 0 ? (
                 <TableContainer component={Paper} sx={{ borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
                   <Table stickyHeader aria-label="accounts table">
                     <TableHead>
-                      <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+                      <TableRow>
                         {['Account Number', 'Balance', 'Status', 'Created At', 'Actions'].map((header) => (
                           <TableCell
                             key={header}
@@ -249,9 +243,7 @@ export default function AccountManagement() {
                             />
                           </TableCell>
                           <TableCell sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>
-                            {acc.created_at
-                              ? new Date(Number(acc.created_at)).toLocaleString('en-IN')
-                              : 'N/A'}
+                            {new Date(Number(acc.createdAt)).toLocaleString()}
                           </TableCell>
                           <TableCell>
                             <Box sx={{ display: 'flex', gap: 1 }}>
@@ -282,15 +274,19 @@ export default function AccountManagement() {
                     </TableBody>
                   </Table>
                 </TableContainer>
-              </CardContent>
-            </Card>
-          )}
+              ) : customerId && !error ? (
+                <Typography variant="body2" align="center" sx={{ py: 4, color: 'text.secondary' }}>
+                  No accounts found for this customer.
+                </Typography>
+              ) : null}
+            </CardContent>
+          </Card>
 
           {/* Create New Account */}
           <Card elevation={3} sx={{ borderRadius: 2 }}>
             <CardContent>
               <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2', mb: 3 }}>
-                <AddCircleOutlineIcon fontSize="small" /> Create New Account
+                Create New Account
               </Typography>
               <Grid container spacing={3}>
                 <Grid item xs={12} sm={4}>
@@ -343,7 +339,6 @@ export default function AccountManagement() {
                 <Button
                   variant="contained"
                   color="primary"
-                  startIcon={<AddCircleOutlineIcon />}
                   onClick={handleCreateAccount}
                   size="large"
                   sx={{ borderRadius: '8px' }}

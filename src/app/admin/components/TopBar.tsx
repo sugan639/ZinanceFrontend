@@ -2,28 +2,24 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { UserCircle } from 'lucide-react';
 import ProfileDrawer from '@/app/admin/components/ProfileDrawer';
 import { ADMIN_PROFILE_URL } from '@/lib/constants';
 import axios from 'axios';
 import '@/app/admin/css/topbar.css';
 import UserAvatar from './UserAvatar';
 
-export default function TopBar() {
+interface TopBarProps {
+  user: any;
+  onProfileClick: () => void;
+}
+
+
+export default function TopBar({ user, onProfileClick }: TopBarProps) {
   const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
 
-
-  useEffect(() => {
-    axios
-      .get(ADMIN_PROFILE_URL, { withCredentials: true })
-      .then(res => setUser(res.data))
-      .catch(() => (window.location.href = '/login'))
-      .finally(() => setLoading(false));
-  }, []);
 
   return (
     <>
@@ -47,7 +43,7 @@ export default function TopBar() {
           {/* Profile icon on right */}
           <button
             className="text-gray-700 hover:text-blue-700 cursor-pointer"
-            onClick={() => setDrawerOpen(true)}
+            onClick={onProfileClick}
             title="Profile"
           >
             <UserAvatar name={user?.name || 'U'} size={36} />
@@ -56,7 +52,11 @@ export default function TopBar() {
       </header>
 
       {!loading && (
-        <ProfileDrawer user={user} visible={drawerOpen} setVisible={setDrawerOpen} />
+        <ProfileDrawer
+          user={user}
+          visible={drawerOpen}
+          setVisible={setDrawerOpen}
+        />
       )}
     </>
   );

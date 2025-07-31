@@ -2,30 +2,25 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import '@/app/employee/css/topbar.css';
+import { UserCircle } from 'lucide-react';
+import ProfileDrawer from '@/app/admin/components/ProfileDrawer';
+import { CUSTOMER_PROFILE_URL } from '@/lib/constants';
+import axios from 'axios';
+import '@/app/customer/css/topbar.css';
 import UserAvatar from './UserAvatar';
-import ProfileDrawer from './ProfileDrawer';
 
 
+interface TopBarProps {
+  user: any;
+  onProfileClick: () => void;
+}
 
-type Props = {
-  user?: {
-    name: string;
-    email: string;
-    customerId: string;
-    mobileNumber: string;
-    address : string;
-    dob: string;
-    panNumber: string;
-    aadharNumber: string;
-    [key: string]: any;
-  } | null;
-};
 
-export default function TopBar({ user }: Props) {
+export default function TopBar({ user, onProfileClick }: TopBarProps) {
   const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
- 
+  const [loading, setLoading] = useState(true);
+
 
 
   return (
@@ -49,17 +44,22 @@ export default function TopBar({ user }: Props) {
 
           {/* Profile icon on right */}
           <button
-            className="cursor-pointer text-gray-700 hover:text-blue-700"
-            onClick={() => setDrawerOpen(true)}
+            className="text-gray-700 hover:text-blue-700 cursor-pointer"
+            onClick={onProfileClick}
             title="Profile"
           >
-            <UserAvatar name={user?.name || 'Z'} size={36} />
+            <UserAvatar name={user?.name || 'U'} size={36} />
           </button>
         </div>
       </header>
 
-        <ProfileDrawer user={user} visible={drawerOpen} setVisible={setDrawerOpen} />
-
+      {!loading && (
+        <ProfileDrawer
+          user={user}
+          visible={drawerOpen}
+          setVisible={setDrawerOpen}
+        />
+      )}
     </>
   );
 }

@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-
 import axios from 'axios';
 import {
   EMPLOYEE_PROFILE_URL,
@@ -9,10 +8,29 @@ import {
   EMPLOYEE_WITHDRAW_URL,
   EMPLOYEE_TRANSFER_URL,
 } from '@/lib/constants';
-import TransactionForm from '@/app/admin/components/TransactionForm';
 import TopBar from '../employeeComponents/TopBar';
 import Sidebar from '../employeeComponents/SideBar';
 import Loading from '../../Loading';
+
+import {
+  Box,
+  Tabs,
+  Tab,
+  Typography,
+  Card,
+  CardContent,
+  Button,
+  Alert,
+  AlertTitle,
+  Divider,
+} from '@mui/material';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import MoneyOffCsredIcon from '@mui/icons-material/MoneyOffCsred';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import ReceiptIcon from '@mui/icons-material/Receipt';
+import TransactionForm from '../employeeComponents/TransactionForm';
 
 export default function MoneyTransferPage() {
   const [activeTab, setActiveTab] = useState<'DEPOSIT' | 'WITHDRAW' | 'TRANSFER'>('DEPOSIT');
@@ -33,23 +51,19 @@ export default function MoneyTransferPage() {
         setUser(res.data);
       } catch {
         window.location.href = '/login';
-      }
-      finally{
+      } finally {
         setLoading(false);
       }
     };
     fetchProfile();
   }, []);
 
-
-  // Page loading
-  if(loading){
-   return <Loading message="Loading user management..." />;
+  if (loading) {
+    return <Loading message="Loading money transfer..." />;
   }
 
   const handleSubmit = async () => {
     setMessage('');
-
     try {
       if (activeTab === 'DEPOSIT') {
         const res = await axios.post(
@@ -82,10 +96,9 @@ export default function MoneyTransferPage() {
           amount: Number(amount),
           type: txType,
         };
-        if (txType === 'INTER_BANK' ) {
+        if (txType === 'INTER_BANK') {
           payload.ifsc_code = ifscCode;
         }
-
         const res = await axios.post(EMPLOYEE_TRANSFER_URL, payload, {
           withCredentials: true,
         });
@@ -106,55 +119,95 @@ export default function MoneyTransferPage() {
   return (
     <>
       <Sidebar />
-      <TopBar user={user}/>
-      
-      
+      <TopBar user={user} />
 
-      <main className="pl-64 pt-20 min-h-screen bg-gray-100">
-        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] px-4">
+      <main className="pl-64 pt-20 min-h-screen bg-gray-50">
+        <div className="max-w-md mx-auto px-4 py-8">
+          {/* Header */}
+          <Box sx={{ textAlign: 'center', mb: 6 }}>
+            <Typography variant="h4" component="h1" className="text-3xl font-bold text-gray-800 flex items-center justify-center gap-2">
+              <ReceiptIcon fontSize="large" /> Money Transfer
+            </Typography>
+            <Typography variant="subtitle1" className="text-gray-600 mt-2">
+              Perform deposits, withdrawals, and transfers
+            </Typography>
+          </Box>
+
           {/* Tabs */}
-          <div className="flex justify-center space-x-4 mb-6">
-            {(['DEPOSIT', 'WITHDRAW', 'TRANSFER'] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => {
-                  setActiveTab(tab);
-                  setMessage('');
-                }}
-                className={`px-4 py-2 rounded ${
-                  activeTab === tab
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white border text-blue-600 hover:bg-blue-50'
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
+          <Card elevation={3} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+            <Tabs
+              value={activeTab}
+              onChange={(_, newValue) => {
+                setActiveTab(newValue);
+                setMessage('');
+              }}
+              variant="fullWidth"
+              textColor="primary"
+              indicatorColor="primary"
+              sx={{
+                '& .MuiTab-root': {
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  fontSize: '1rem',
+                },
+              }}
+            >
+              <Tab
+                value="DEPOSIT"
+                label="Deposit"
+                icon={<AccountBalanceWalletIcon />}
+                iconPosition="start"
+              />
+              <Tab
+                value="WITHDRAW"
+                label="Withdraw"
+                icon={<MoneyOffCsredIcon />}
+                iconPosition="start"
+              />
+              <Tab
+                value="TRANSFER"
+                label="Transfer"
+                icon={<SwapHorizIcon />}
+                iconPosition="start"
+              />
+            </Tabs>
 
-          {/* Form Box */}
-          <div className="w-full max-w-md">
-            <TransactionForm
-              type={activeTab}
-              accountNumber={accountNumber}
-              amount={amount}
-              fromAccount={fromAccount}
-              toAccount={toAccount}
-              txType={txType}
-              ifscCode={ifscCode}
-              onAccountChange={setAccountNumber}
-              onAmountChange={setAmount}
-              onFromAccountChange={setFromAccount}
-              onToAccountChange={setToAccount}
-              onTxTypeChange={setTxType}
-              onIFSCChange={setIfscCode}
-              onSubmit={handleSubmit}
-              message={message}
-            />
-          </div>
+            <Divider />
+
+            <CardContent>
+              {/* Success & Error Messages */}
+              {message && (
+                <Alert
+                  severity={message.includes('successful') ? 'success' : 'error'}
+                  icon={message.includes('successful') ? <CheckCircleOutlineIcon /> : <ErrorOutlineIcon />}
+                  sx={{ mb: 3 }}
+                >
+                  <AlertTitle>{message.includes('successful') ? 'Success' : 'Error'}</AlertTitle>
+                  {message}
+                </Alert>
+              )}
+
+              {/* Form */}
+              <TransactionForm
+                type={activeTab}
+                accountNumber={accountNumber}
+                amount={amount}
+                fromAccount={fromAccount}
+                toAccount={toAccount}
+                txType={txType}
+                ifscCode={ifscCode}
+                onAccountChange={setAccountNumber}
+                onAmountChange={setAmount}
+                onFromAccountChange={setFromAccount}
+                onToAccountChange={setToAccount}
+                onTxTypeChange={setTxType}
+                onIFSCChange={setIfscCode}
+                onSubmit={handleSubmit}
+              />
+            </CardContent>
+          </Card>
         </div>
       </main>
     </>
   );
 }
-

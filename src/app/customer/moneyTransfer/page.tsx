@@ -156,26 +156,19 @@ export default function MoneyTransferPage() {
     setReceiptData(null);
   };
 
-  if (loading) return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-gray-100">
-      <Loading message="Loading your profile..." />
-    </div>
-  );
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100">
-      <Sidebar />
-      <TopBar user={user} />
-      <main className="pl-64 pt-20 pb-12">
+    <div className=" bg-gradient-to-br  ">
+    
+      <main className="pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <header className="mb-8 animate-fade-in">
+          <header className="mb-8 ">
             <h1 className="text-3xl font-bold text-gray-800 sm:text-4xl">Transfer Funds</h1>
             <p className="mt-2 text-lg text-gray-600">Securely send money to any account with ease.</p>
           </header>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <section className="bg-white p-6 rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl animate-slide-up">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Transfer Details</h2>
+            <section className="bg-white p-6 rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl ">
               <TransactionForm
                 type={activeTab}
                 accountNumber={accountNumber}

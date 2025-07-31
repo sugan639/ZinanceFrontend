@@ -1,6 +1,16 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import {
+  TextField,
+  Button,
+  Select,
+  MenuItem,
+  InputLabel,
+  FormControl,
+  Box,
+  Typography,
+} from '@mui/material';
 
 type Props = {
   type: 'DEPOSIT' | 'WITHDRAW' | 'TRANSFER';
@@ -20,10 +30,13 @@ type Props = {
   message: string;
 };
 
-const transactionTypes = [
-  'INTRA_BANK',
-  'INTER_BANK',
-];
+const transactionTypes = ['INTRA_BANK', 'INTER_BANK'] as const;
+
+// Global cache (persists across re-renders)
+const accountCache: { accounts: any[]; loading: boolean } = {
+  accounts: [],
+  loading: false,
+};
 
 export default function TransactionForm({
   type,
@@ -42,115 +55,230 @@ export default function TransactionForm({
   onSubmit,
   message,
 }: Props) {
+  const [accounts, setAccounts] = useState<any[]>([]);
+  const [loadingAccounts, setLoadingAccounts] = useState(false);
+
+  useEffect(() => {
+    if (type !== 'TRANSFER') return;
+
+    // Use cached data
+    if (accountCache.accounts.length > 0) {
+      setAccounts(accountCache.accounts);
+      if (fromAccount === '' && onFromAccountChange) {
+        onFromAccountChange(accountCache.accounts[0].accountNumber);
+      }
+      return;
+    }
+
+    // Avoid duplicate fetches
+    if (accountCache.loading) {
+      setLoadingAccounts(true);
+      const unsubscribe = setInterval(() => {
+        if (accountCache.accounts.length > 0) {
+          setAccounts(accountCache.accounts);
+          if (fromAccount === '' && onFromAccountChange) {
+            onFromAccountChange(accountCache.accounts[0].accountNumber);
+          }
+          setLoadingAccounts(false);
+          clearInterval(unsubscribe);
+        }
+      }, 100);
+      return () => clearInterval(unsubscribe);
+    }
+
+    // Fetch accounts
+    const fetchAccounts = async () => {
+      accountCache.loading = true;
+      setLoadingAccounts(true);
+      try {
+        const res = await fetch('http://localhost:8080/Banking_App/customer/accounts', {
+          method: 'GET',
+          credentials: 'include',
+        });
+
+        if (!res.ok) throw new Error('Failed to fetch accounts');
+
+        const data = await res.json();
+        const fetchedAccounts = Array.isArray(data.accounts) ? data.accounts : [];
+
+        accountCache.accounts = fetchedAccounts;
+        setAccounts(fetchedAccounts);
+
+        if (fetchedAccounts.length > 0 && fromAccount === '' && onFromAccountChange) {
+          onFromAccountChange(fetchedAccounts[0].accountNumber);
+        }
+      } catch (err) {
+        console.error('Error fetching accounts:', err);
+        setAccounts([]);
+      } finally {
+        accountCache.loading = false;
+        setLoadingAccounts(false);
+      }
+    };
+
+    fetchAccounts();
+  }, [type, fromAccount, onFromAccountChange]);
+
   return (
-    <div className="flex justify-center items-center h-auto">
-      <div className="p-6 bg-white rounded shadow-md w-full max-w-md">
-        <h2 className="text-lg font-semibold mb-4 text-blue-800">
-          {type === 'DEPOSIT' && 'Deposit Money'}
-          {type === 'WITHDRAW' && 'Withdraw Money'}
-          {type === 'TRANSFER' && 'Transfer Money'}
-        </h2>
+    <div className="flex justify-center items-start h-auto">
+      {/* Removed animation like slide-up or hover scale */}
+      <div className="bg-white rounded-xl shadow-lg border border-gray-100 w-full max-w-md">
+        {/* Header */}
+        <div className="px-6 pt-6 pb-4 border-b border-gray-100">
+          <Typography variant="h6" className="text-xl font-semibold text-gray-800">
+            {type === 'DEPOSIT' && 'Deposit Money'}
+            {type === 'WITHDRAW' && 'Withdraw Money'}
+            {type === 'TRANSFER' && 'Transfer Money'}
+          </Typography>
+        </div>
 
-        {type === 'TRANSFER' ? (
-          <>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">From Account</label>
-              <input
-                type="text"
-                value={fromAccount}
-                onChange={(e) => onFromAccountChange?.(e.target.value)}
-                className="mt-1 block w-full border rounded px-3 py-2 shadow-sm text-gray-900"
-                placeholder="Sender account number"
-              />
-            </div>
+        {/* Form Body */}
+        <Box component="form" sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {type === 'TRANSFER' ? (
+            <>
+              {/* From Account (Dropdown) */}
+              <FormControl fullWidth size="small">
+                <InputLabel id="from-account-label">From Account</InputLabel>
+                <Select
+                  labelId="from-account-label"
+                  value={fromAccount}
+                  label="From Account"
+                  onChange={(e) => onFromAccountChange?.(e.target.value)}
+                  sx={{ '& .MuiOutlinedInput-notchedOutline': { borderRadius: '8px' } }}
+                  disabled={loadingAccounts}
+                >
+                  {loadingAccounts ? (
+                    <MenuItem disabled>Loading accounts...</MenuItem>
+                  ) : accounts.length === 0 ? (
+                    <MenuItem disabled>No accounts found</MenuItem>
+                  ) : (
+                    accounts.map((acc) => (
+                      <MenuItem key={acc.accountNumber} value={acc.accountNumber}>
+                        {acc.accountNumber} (₹{parseFloat(acc.balance).toFixed(2)})
+                      </MenuItem>
+                    ))
+                  )}
+                </Select>
+              </FormControl>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">To Account</label>
-              <input
-                type="text"
+              {/* To Account */}
+              <TextField
+                fullWidth
+                label="To Account"
+                placeholder="Enter recipient account number"
                 value={toAccount}
                 onChange={(e) => onToAccountChange?.(e.target.value)}
-                className="mt-1 block w-full border rounded px-3 py-2 shadow-sm text-gray-900"
-                placeholder="Recipient account number"
+                variant="outlined"
+                size="small"
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
               />
-            </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">Amount</label>
-              <input
+              {/* Amount */}
+              <TextField
+                fullWidth
+                label="Amount"
+                placeholder="Enter amount"
                 type="number"
                 value={amount}
                 onChange={(e) => onAmountChange(e.target.value)}
-                className="mt-1 block w-full border rounded px-3 py-2 shadow-sm text-gray-900"
-                placeholder="Enter amount"
+                variant="outlined"
+                size="small"
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
               />
-            </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">Transaction Type</label>
-              <select
-                value={txType}
-                onChange={(e) => onTxTypeChange?.(e.target.value)}
-                className="mt-1 block w-full border rounded px-3 py-2 shadow-sm text-gray-900"
-              >
-                <option value="">Select type</option>
-                {transactionTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-            </div>
+              {/* Transaction Type */}
+              <FormControl fullWidth size="small">
+                <InputLabel id="tx-type-label">Transaction Type</InputLabel>
+                <Select
+                  labelId="tx-type-label"
+                  value={txType}
+                  label="Transaction Type"
+                  onChange={(e) => onTxTypeChange?.(e.target.value)}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                >
+                  <MenuItem value="">Select Type</MenuItem>
+                  {transactionTypes.map((type) => (
+                    <MenuItem key={type} value={type}>
+                      {type.replace('_', ' ')}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
-            {(txType === 'INTER_BANK' ) && (
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">IFSC Code</label>
-                <input
-                  type="text"
+              {/* IFSC Code (Inter-Bank Only) */}
+              {txType === 'INTER_BANK' && (
+                <TextField
+                  fullWidth
+                  label="IFSC Code"
+                  placeholder="Enter IFSC code"
                   value={ifscCode}
                   onChange={(e) => onIFSCChange?.(e.target.value)}
-                  className="mt-1 block w-full border rounded px-3 py-2 shadow-sm text-gray-900"
-                  placeholder="Enter IFSC code"
+                  variant="outlined"
+                  size="small"
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                 />
-              </div>
-            )}
-          </>
-        ) : (
-          <>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">Account Number</label>
-              <input
-                type="text"
+              )}
+            </>
+          ) : (
+            <>
+              {/* Account Number */}
+              <TextField
+                fullWidth
+                label="Account Number"
+                placeholder="Enter account number"
                 value={accountNumber}
                 onChange={(e) => onAccountChange(e.target.value)}
-                className="mt-1 block w-full border rounded px-3 py-2 shadow-sm text-gray-900"
-                placeholder="Enter account number"
+                variant="outlined"
+                size="small"
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
               />
-            </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">Amount</label>
-              <input
-                type="number"
-                value={amount}
-                onChange={(e) => onAmountChange(e.target.value)}
-                className="mt-1 block w-full border rounded px-3 py-2 shadow-sm text-gray-900"
+              {/* Amount */}
+              <TextField
+                fullWidth
+                label="Amount"
                 placeholder="Enter amount"
+                type="number"
+                value={amount || ''}
+                onChange={(e) => onAmountChange(e.target.value)}
+                variant="outlined"
+                size="small"
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
               />
-            </div>
-          </>
-        )}
+            </>
+          )}
 
-        <button
-          onClick={onSubmit}
-          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
-        >
-          {type === 'DEPOSIT' && 'Make Deposit'}
-          {type === 'WITHDRAW' && 'Make Withdrawal'}
-          {type === 'TRANSFER' && 'Make Transfer'}
-        </button>
+          {/* Submit Button */}
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={onSubmit}
+            fullWidth
+            sx={{
+              mt: 2,
+              py: 1.5,
+              borderRadius: '8px',
+              textTransform: 'none',
+              fontWeight: 'medium',
+            }}
+          >
+            {type === 'DEPOSIT' && 'Make Deposit'}
+            {type === 'WITHDRAW' && 'Make Withdrawal'}
+            {type === 'TRANSFER' && 'Make Transfer'}
+          </Button>
 
-        {message && <p className="mt-4 text-sm text-center text-green-700">{message}</p>}
+          {/* Success/Info Message */}
+          {message && (
+            <Typography
+              variant="body2"
+              color={message.includes('successful') || message.includes('Transfer') ? 'success.main' : 'error'}
+              align="center"
+              sx={{ mt: 1, fontSize: '0.875rem' }}
+            >
+              {message}
+            </Typography>
+          )}
+        </Box>
       </div>
     </div>
   );

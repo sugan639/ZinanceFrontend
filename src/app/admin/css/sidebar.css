@@ -1,27 +1,21 @@
-/* /app/css/sidebar.css */
+/* sidebar.css */
 
 .sidebar {
   width: 240px;
-  background-color: #ADD8E6; /* Light Blue */
-  color: #1e3a8a; /* Darker text for contrast */
+  background: linear-gradient(to bottom, #7ec1ee, #cfcdcd); /* light blue to white fade */
+  color: #1e3a8a;
   height: 100vh;
   position: fixed;
-  top: 0;
+  top: 64px; /* Topbar height */
   left: 0;
   padding: 1.5rem 1.25rem;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.1);
-}
-
-.sidebar .logo h2 {
-  font-size: 1.8rem;
-  font-weight: 700;
-  margin-bottom: 2.5rem;
-  text-align: center;
-  color: #1e3a8a;
-  letter-spacing: 1px;
+  border-right: 1px solid #e5e7eb;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.05);
+  z-index: 40;
+  font-family: 'Segoe UI', sans-serif;
 }
 
 .sidebar nav ul {
@@ -31,29 +25,50 @@
 }
 
 .sidebar nav ul li {
-  margin-bottom: 1.2rem;
+  margin-bottom: 1rem;
 }
 
-.sidebar nav ul li a {
-  color: #1e3a8a;
-  text-decoration: none;
-  font-size: 1.05rem;
+.nav-link {
   display: flex;
   align-items: center;
-  padding: 0.6rem 1rem;
-  border-radius: 0.5rem;
-  transition: background-color 0.25s ease, transform 0.2s ease;
+  gap: 0.8rem;
+  padding: 0.65rem 1rem;
+  font-size: 1.05rem;
+  color: #1e3a8a;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: all 0.25s ease-in-out;
+  position: relative;
+  font-weight: 500;
 }
 
-.sidebar nav ul li a:hover {
-  background-color: #3b82f6;
+.nav-link:hover {
+  background: rgba(59, 130, 246, 0.15);
+  color: #1e40af;
+  transform: translateX(4px);
+  box-shadow: inset 0 0 0 1px #3b82f6;
+}
+
+.nav-link.active {
+  background: linear-gradient(to right, #3b82f6, #60a5fa);
   color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
   transform: translateX(5px);
 }
 
-.sidebar nav ul li a span.icon {
-  margin-right: 0.75rem;
-  font-size: 1.25rem;
+.nav-link.active::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  height: 70%;
+  width: 6px;
+  background: #2563eb;
+  border-radius: 0 4px 4px 0;
+  box-shadow: 1px 0 8px rgba(59, 130, 246, 0.3);
 }
 
-
+/* Icon size override */
+.nav-icon {
+  font-size: 1.35rem;
+}

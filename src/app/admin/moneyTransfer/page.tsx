@@ -40,7 +40,7 @@ export default function MoneyTransferPage() {
   }, []);
 
   if (loading) {
-    return <Loading message="Loading user management..." />;
+    return <Loading message="Loading money transfer..." />;
   }
 
   const handleSubmit = async () => {
@@ -101,27 +101,24 @@ export default function MoneyTransferPage() {
 
   return (
     <>
-      <Sidebar />
-      <TopBar />
-
-      <main className="pl-64 pt-20 min-h-screen bg-gray-50">
-        <div className="max-w-lg mx-auto px-4 py-8 space-y-8">
+      
+        <div className="max-w-lg mx-auto px-6 py-8 space-y-8">
           {/* Header */}
           <header className="text-center">
             <h1 className="text-3xl font-bold text-gray-800">Money Transfer</h1>
-            <p className="mt-2 text-gray-600">Perform deposits, withdrawals, and fund transfers</p>
+            <p className="mt-2 text-gray-600">Perform deposits, withdrawals, and fund transfers securely</p>
           </header>
 
           {/* Transaction Type Selector */}
-          <div className="bg-white rounded-xl shadow-lg p-6 transition-all duration-300 hover:shadow-xl">
-            <label className="block text-sm font-semibold text-gray-700 mb-3">Select Transaction Type</label>
+          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+            <label className="block text-sm font-semibold text-gray-700 mb-3">Transaction Type</label>
             <select
               value={transactionType}
               onChange={(e) => {
                 setTransactionType(e.target.value as 'DEPOSIT' | 'WITHDRAW' | 'TRANSFER');
                 setMessage('');
               }}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-base"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
             >
               <option value="DEPOSIT">Deposit</option>
               <option value="WITHDRAW">Withdraw</option>
@@ -130,7 +127,7 @@ export default function MoneyTransferPage() {
           </div>
 
           {/* Transaction Form */}
-          <div className="bg-white rounded-xl shadow-lg p-6 transition-all duration-300 hover:shadow-xl">
+          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
             <h2 className="text-xl font-semibold text-gray-800 mb-5">
               {transactionType === 'DEPOSIT' && 'Deposit Funds'}
               {transactionType === 'WITHDRAW' && 'Withdraw Funds'}
@@ -159,10 +156,10 @@ export default function MoneyTransferPage() {
           {/* Success/Error Message */}
           {message && (
             <div
-              className={`p-4 rounded-lg text-sm font-medium animate-fade-in ${
-                message.includes('successful')
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-red-100 text-red-700'
+              className={`p-4 rounded text-sm font-medium ${
+                message.includes('successful') || message.includes('success')
+                  ? 'bg-green-50 text-green-700 border border-green-100'
+                  : 'bg-red-50 text-red-700 border border-red-100'
               }`}
               role="alert"
             >
@@ -170,7 +167,6 @@ export default function MoneyTransferPage() {
             </div>
           )}
         </div>
-      </main>
     </>
   );
 }

@@ -1,37 +1,53 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-
 import axios from 'axios';
 import {
   EMPLOYEE_PROFILE_URL,
   GET_USER__BY_EMPLOYEE,
   NEW_CUSTOMER_BY_EMPLOYEE,
-  UPDATE_USER_BY_EMPLOYEE
- 
+  UPDATE_USER_BY_EMPLOYEE,
 } from '@/lib/constants';
 import Loading from '@/app/Loading';
 import ProfileDrawer from '../employeeComponents/ProfileDrawer';
 import TopBar from '../employeeComponents/TopBar';
 import Sidebar from '../employeeComponents/SideBar';
 
+import {
+  Box,
+  Tabs,
+  Tab,
+  Typography,
+  TextField,
+  Button,
+  Paper,
+  Card,
+  CardContent,
+  Alert,
+  AlertTitle,
+  Grid,
+  Divider,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+} from '@mui/material';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import SearchIcon from '@mui/icons-material/Search';
+import EditIcon from '@mui/icons-material/Edit';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+
 export default function UserManagementPage() {
-  const [tab, setTab] = useState<'createCustomer' | 'createEmployee' | 'getUser'>('createCustomer');
+  const [tab, setTab] = useState<'createCustomer' | 'getUser'>('createCustomer');
   const [user, setUser] = useState<any>(null);
-  const [form, setForm] = useState<any>({});
+  const [form, setForm] = useState<Record<string, any>>({});
   const [responseData, setResponseData] = useState<any>(null);
-  const [editableData, setEditableData] = useState<any>({});
+  const [editableData, setEditableData] = useState<Record<string, any>>({});
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
-
-  const resetForm = () => {
-    setForm({});
-    setResponseData(null);
-    setEditableData({});
-    setError('');
-    setMessage('');
-  };
 
   useEffect(() => {
     axios
@@ -41,12 +57,19 @@ export default function UserManagementPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const resetForm = () => {
+    setForm({});
+    setResponseData(null);
+    setEditableData({});
+    setError('');
+    setMessage('');
+  };
+
   const handleSubmit = async () => {
     setError('');
     setMessage('');
     try {
-      let url = NEW_CUSTOMER_BY_EMPLOYEE;
-      const res = await axios.post(url, form, { withCredentials: true });
+      const res = await axios.post(NEW_CUSTOMER_BY_EMPLOYEE, form, { withCredentials: true });
       setMessage(res.data.message || 'User created successfully!');
       setResponseData(res.data);
       setForm({});
@@ -61,21 +84,13 @@ export default function UserManagementPage() {
     if (!form.user_id) return setError('Please provide a user ID.');
 
     try {
-      const res = await axios.get(GET_USER__BY_EMPLOYEE + form.user_id, { withCredentials: true });
+      const res = await axios.get(`${GET_USER__BY_EMPLOYEE}${form.user_id}`, { withCredentials: true });
       setResponseData(res.data);
 
-          const isEditable = [
-      'name',
-      'email',
-      'pan_number',
-      'mobile_number',
-      'dob',
-      'aadhar_number',
-      'address',
-    ];
+      const editableFields = ['name', 'email', 'pan_number', 'mobile_number', 'dob', 'aadhar_number', 'address'];
+      const initialEditState: Record<string, any> = {};
 
-      const initialEditState: any = {};
-      isEditable.forEach((key) => {
+      editableFields.forEach((key) => {
         if (res.data[key] !== undefined) {
           initialEditState[key] = res.data[key];
         }
@@ -92,9 +107,7 @@ export default function UserManagementPage() {
       const payload = {
         ...editableData,
         user_id: form.user_id,
-   
       };
-
       const res = await axios.post(UPDATE_USER_BY_EMPLOYEE, payload, { withCredentials: true });
       setMessage(res.data.message || 'User updated successfully!');
     } catch (err: any) {
@@ -102,20 +115,8 @@ export default function UserManagementPage() {
     }
   };
 
-  const renderField = (name: string, placeholder: string, type: string = 'text') => (
-    <input
-      type={type}
-      placeholder={placeholder}
-      value={form[name] || ''}
-      onChange={(e) => setForm({ ...form, [name]: e.target.value })}
-      className="w-full px-3 py-2 border border-gray-500 rounded text-gray-900"
-    />
-  );
-
-
-  // Page loading
-  if(loading){
-   return <Loading message="Loading user management..." />;
+  if (loading) {
+    return <Loading message="Loading user management..." />;
   }
 
   return (
@@ -124,160 +125,358 @@ export default function UserManagementPage() {
       <TopBar user={user} />
       {user && <ProfileDrawer user={user} />}
 
-      <main className="pl-64 pt-20 bg-gray-100 min-h-screen p-6">
-        <div className="max-w-3xl mx-auto">
-          {/* Tabs */}
-          <div className="flex space-x-4 mb-6">
-            {['createCustomer', 'getUser'].map((tabName) => (
-              <button
-                key={tabName}
-                onClick={() => {
-                  setTab(tabName as any);
-                  resetForm();
-                }}
-                className={`px-4 py-2 rounded ${
-                  tab === tabName ? 'bg-blue-700 text-white' : 'bg-white border text-blue-700'
-                }`}
-              >
-                {tabName === 'createCustomer'
-                  ? 'Add Customer'
-                  : 'Get User'}
-              </button>
-            ))}
-          </div>
+      <main className="pl-64 pt-20 min-h-screen bg-gray-50 p-6">
+        <div className="max-w-5xl mx-auto space-y-8">
+          {/* Header */}
+          <Box sx={{ textAlign: 'center', mb: 6 }}>
+            <Typography variant="h4" component="h1" className="text-3xl font-bold text-gray-800 flex items-center justify-center gap-2">
+              <AccountCircleIcon fontSize="large" /> User Management
+            </Typography>
+            <Typography variant="subtitle1" className="text-gray-600 mt-2">
+              Create customers and manage user profiles
+            </Typography>
+          </Box>
 
-          {/* Forms */}
-          <div className="bg-white shadow rounded p-6 space-y-4 text-gray-900">
-            {tab === 'createCustomer' && (
-              <>
-                <h2 className="text-xl font-semibold text-blue-800">New Customer</h2>
-                {renderField('name', 'Full Name')}
-                {renderField('email', 'Email')}
-                {renderField('mobile_number', 'Mobile Number')}
-                <input
-                  type="date"
-                  value={form.dob ? new Date(form.dob).toISOString().split('T')[0] : ''}
-                  onChange={(e) => {
-                    const dobMillis = new Date(e.target.value).getTime();
-                    setForm({ ...form, dob: dobMillis });
-                  }}
-                  className="w-full px-3 py-2 border border-gray-500 rounded text-gray-900"
-                />
-                {renderField('address', 'Address')}
-                {renderField('aadhar_number', 'Aadhar Number')}
-                {renderField('pan_number', 'PAN Number')}
-                {renderField('branch_id', 'Branch ID')}
-                <button
-                  onClick={handleSubmit}
-                  className="w-full bg-blue-700 text-white py-2 rounded hover:bg-blue-800"
-                >
-                  Create Customer
-                </button>
-                {responseData?.customerId && (
-                  <div className="mt-4 p-4 border rounded bg-blue-100 text-blue-900">
-                    <p><strong>Customer ID:</strong> {responseData.customerId}</p>
-                    <p><strong>Temporary Password:</strong> {responseData.newPassword}</p>
-                  </div>
-                )}
-              </>
-            )}
-
-
-            {tab === 'getUser' && (
-              <>
-                <h2 className="text-xl font-semibold text-blue-800">Get User</h2>
-                {renderField('user_id', 'Enter User ID')}
-                <button
-                  onClick={handleFetch}
-                  className="w-full bg-blue-700 text-white py-2 rounded hover:bg-blue-800"
-                >
-                  Fetch User
-                </button>
-              </>
-            )}
-
-            {message && <p className="text-green-600 font-semibold">{message}</p>}
-            {error && <p className="text-red-600 font-semibold">{error}</p>}
-          </div>
-
-          {/* Editable User Data */}
-          {responseData && tab === 'getUser' && (
-            <div className="bg-white shadow mt-6 rounded p-6">
-              <h3 className="text-lg font-bold text-blue-800 mb-4">Edit User Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-gray-900">
-                {Object.entries(responseData).map(([key, val]) => {
-                  const isEditable = [
-                    'name',
-                    'email',
-                    'pan_number',
-                    'mobile_number',
-                    'dob',
-                    'aadhar_number',
-                    'address',
-                  ].includes(key);
-
-                  const isDate = key.toLowerCase().includes('dob');
-                  const displayValue = isDate && !isNaN(Number(val))
-                    ? new Date(Number(val)).toLocaleDateString()
-                    : String(val);
-
-                  return (
-                    <div key={key}>
-                      <label className="font-medium block mb-1">
-                        {key.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').replace(/\b\w/g, (l) => l.toUpperCase())}
-                      </label>
-                      {isEditable ? (
-                        isDate ? (
-                          <input
-                            type="date"
-                            className="border px-2 py-1 rounded w-full text-gray-900 border-gray-500"
-                            value={
-                              editableData[key]
-                                ? new Date(Number(editableData[key])).toISOString().split('T')[0]
-                                : ''
-                            }
-                            onChange={(e) =>
-                              setEditableData({
-                                ...editableData,
-                                [key]: new Date(e.target.value).getTime(),
-                              })
-                            }
-                          />
-                        ) : (
-                            <input
-                          type={['mobile_number', 'aadhar_number'].includes(key) ? 'number' : 'text'}
-                          className="border px-2 py-1 rounded w-full text-gray-900 border-gray-500"
-                          value={editableData[key]?.toString() || ''}
-                          onChange={(e) =>
-                            setEditableData({
-                              ...editableData,
-                              [key]: ['mobile_number', 'aadhar_number'].includes(key)
-                                ? Number(e.target.value)
-                                : e.target.value,
-                            })
-                          }
-                        />
-
-                        )
-                      ) : (
-                        <input
-                          className="border px-2 py-1 rounded w-full bg-gray-100 text-gray-700"
-                          value={displayValue}
-                          disabled
-                        />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-              <button
-                onClick={handleUpdate}
-                className="mt-6 w-full bg-blue-700 text-white py-2 rounded hover:bg-blue-800"
-              >
-                Save Changes
-              </button>
-            </div>
+          {/* Success & Error Messages */}
+          {message && (
+            <Alert severity="success" icon={<CheckCircleOutlineIcon />} sx={{ mb: 3 }}>
+              <AlertTitle>Success</AlertTitle>
+              {message}
+            </Alert>
           )}
+          {error && (
+            <Alert severity="error" icon={<ErrorOutlineIcon />} sx={{ mb: 3 }}>
+              <AlertTitle>Error</AlertTitle>
+              {error}
+            </Alert>
+          )}
+
+          {/* Tabs */}
+          <Card elevation={3} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+            <Tabs
+              value={tab}
+              onChange={(_, newValue) => {
+                setTab(newValue);
+                resetForm();
+              }}
+              variant="fullWidth"
+              textColor="primary"
+              indicatorColor="primary"
+              sx={{
+                '& .MuiTab-root': {
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  fontSize: '1rem',
+                },
+              }}
+            >
+              <Tab
+                value="createCustomer"
+                label="Create Customer"
+                icon={<PersonAddIcon />}
+                iconPosition="start"
+              />
+              <Tab
+                value="getUser"
+                label="Get User"
+                icon={<SearchIcon />}
+                iconPosition="start"
+              />
+            </Tabs>
+
+            <Divider />
+
+            <CardContent>
+              {/* Create Customer Form */}
+              {tab === 'createCustomer' && (
+                <Box component="form" noValidate autoComplete="off">
+                  <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2', mb: 3 }}>
+                    <EditIcon fontSize="small" /> New Customer
+                  </Typography>
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Full Name"
+                        placeholder="Enter full name"
+                        value={form.name || ''}
+                        onChange={(e) => setForm({ ...form, name: e.target.value })}
+                        variant="outlined"
+                        size="small"
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Email"
+                        type="email"
+                        placeholder="Enter email"
+                        value={form.email || ''}
+                        onChange={(e) => setForm({ ...form, email: e.target.value })}
+                        variant="outlined"
+                        size="small"
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Mobile Number"
+                        type="tel"
+                        placeholder="Enter mobile number"
+                        value={form.mobile_number || ''}
+                        onChange={(e) => setForm({ ...form, mobile_number: e.target.value })}
+                        variant="outlined"
+                        size="small"
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Date of Birth"
+                        type="date"
+                        value={form.dob ? new Date(form.dob).toISOString().split('T')[0] : ''}
+                        onChange={(e) => {
+                          const dobMillis = new Date(e.target.value).getTime();
+                          setForm({ ...form, dob: dobMillis });
+                        }}
+                        InputLabelProps={{ shrink: true }}
+                        variant="outlined"
+                        size="small"
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        label="Address"
+                        multiline
+                        rows={2}
+                        placeholder="Enter address"
+                        value={form.address || ''}
+                        onChange={(e) => setForm({ ...form, address: e.target.value })}
+                        variant="outlined"
+                        size="small"
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Aadhar Number"
+                        type="number"
+                        placeholder="Enter Aadhar number"
+                        value={form.aadhar_number || ''}
+                        onChange={(e) => setForm({ ...form, aadhar_number: e.target.value })}
+                        variant="outlined"
+                        size="small"
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="PAN Number"
+                        placeholder="Enter PAN number"
+                        value={form.pan_number || ''}
+                        onChange={(e) => setForm({ ...form, pan_number: e.target.value })}
+                        variant="outlined"
+                        size="small"
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Branch ID"
+                        type="number"
+                        placeholder="Enter branch ID"
+                        value={form.branch_id || ''}
+                        onChange={(e) => setForm({ ...form, branch_id: e.target.value })}
+                        variant="outlined"
+                        size="small"
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                      />
+                    </Grid>
+                  </Grid>
+
+                  <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      startIcon={<PersonAddIcon />}
+                      onClick={handleSubmit}
+                      size="large"
+                      sx={{ borderRadius: '8px' }}
+                    >
+                      Create Customer
+                    </Button>
+                  </Box>
+
+                  {/* Success Response */}
+                  {responseData?.customerId && (
+                    <Paper sx={{ mt: 4, p: 3, backgroundColor: '#e3f2fd', borderLeft: 5, borderColor: '#1976d2' }}>
+                      <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+                        ✅ Customer Created Successfully
+                      </Typography>
+                      <Divider sx={{ my: 1 }} />
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} sm={6}>
+                          <Typography><strong>Customer ID:</strong> {responseData.customerId}</Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <Typography><strong>Temporary Password:</strong> {responseData.newPassword}</Typography>
+                        </Grid>
+                      </Grid>
+                    </Paper>
+                  )}
+                </Box>
+              )}
+
+              {/* Get User Form */}
+              {tab === 'getUser' && (
+                <Box component="form" noValidate autoComplete="off">
+                  <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2', mb: 3 }}>
+                    <SearchIcon fontSize="small" /> Fetch User Details
+                  </Typography>
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} sm={8}>
+                      <TextField
+                        fullWidth
+                        label="User ID"
+                        placeholder="Enter customer ID"
+                        value={form.user_id || ''}
+                        onChange={(e) => setForm({ ...form, user_id: e.target.value })}
+                        type="text"
+                        variant="outlined"
+                        size="small"
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        color="secondary"
+                        startIcon={<SearchIcon />}
+                        onClick={handleFetch}
+                        size="large"
+                        sx={{ height: '100%', borderRadius: '8px' }}
+                      >
+                        Fetch
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </Box>
+              )}
+
+              {/* Editable User Data */}
+              {responseData && tab === 'getUser' && (
+                <Box sx={{ mt: 5 }}>
+                  <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+                    <EditIcon fontSize="small" /> Edit User Details
+                  </Typography>
+                  <Card variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
+                    <Grid container spacing={3}>
+                      {Object.entries(responseData).map(([key, val]: [string, any]) => {
+                        const isEditable = [
+                          'name',
+                          'email',
+                          'pan_number',
+                          'mobile_number',
+                          'dob',
+                          'aadhar_number',
+                          'address',
+                        ].includes(key);
+
+                        const displayValue =
+                          key === 'dob' && !isNaN(Number(val))
+                            ? new Date(Number(val)).toLocaleDateString()
+                            : String(val);
+
+                        const label = key
+                          .replace(/_/g, ' ')
+                          .replace(/\b\w/g, (l) => l.toUpperCase());
+
+                        return (
+                          <Grid item xs={12} sm={6} key={key}>
+                            <Typography variant="body2" color="text.secondary" gutterBottom>
+                              {label}
+                            </Typography>
+                            {isEditable ? (
+                              key === 'dob' ? (
+                                <TextField
+                                  type="date"
+                                  fullWidth
+                                  size="small"
+                                  value={
+                                    editableData[key]
+                                      ? new Date(Number(editableData[key])).toISOString().split('T')[0]
+                                      : ''
+                                  }
+                                  onChange={(e) =>
+                                    setEditableData({
+                                      ...editableData,
+                                      [key]: new Date(e.target.value).getTime(),
+                                    })
+                                  }
+                                  InputLabelProps={{ shrink: true }}
+                                  variant="outlined"
+                                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                                />
+                              ) : (
+                                <TextField
+                                  fullWidth
+                                  type={['mobile_number', 'aadhar_number'].includes(key) ? 'number' : 'text'}
+                                  value={editableData[key]?.toString() || ''}
+                                  onChange={(e) =>
+                                    setEditableData({
+                                      ...editableData,
+                                      [key]:
+                                        ['mobile_number', 'aadhar_number'].includes(key)
+                                          ? Number(e.target.value)
+                                          : e.target.value,
+                                    })
+                                  }
+                                  variant="outlined"
+                                  size="small"
+                                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                                />
+                              )
+                            ) : (
+                              <TextField
+                                fullWidth
+                                value={displayValue}
+                                disabled
+                                variant="outlined"
+                                size="small"
+                                sx={{ backgroundColor: '#f5f5f5', '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                              />
+                            )}
+                          </Grid>
+                        );
+                      })}
+                    </Grid>
+
+                    <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        startIcon={<EditIcon />}
+                        onClick={handleUpdate}
+                        size="medium"
+                        sx={{ borderRadius: '8px' }}
+                      >
+                        Save Changes
+                      </Button>
+                    </Box>
+                  </Card>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </main>
     </>

@@ -19,9 +19,10 @@ type Props = {
   onSubmit: (params: any) => void;
   onReset?: () => void;
   message?: string;
+  user?: any; // ✅ Add this line
 };
 
-export default function TransactionSearchForm({ onSubmit, onReset, message }: Props) {
+export default function TransactionSearchForm({ onSubmit, onReset, message, user }: Props) {
   const [mode, setMode] = useState<'BY_ID' | 'BY_FILTER'>('BY_ID');
   const [txnId, setTxnId] = useState('');
   const [customerId, setCustomerId] = useState('');
@@ -80,10 +81,6 @@ export default function TransactionSearchForm({ onSubmit, onReset, message }: Pr
 
   return (
     <Box className="p-6 bg-white rounded-xl shadow-lg max-w-lg mx-auto transition-all duration-300 hover:shadow-xl">
-      <h2 className="text-xl font-semibold text-gray-800 mb-5 flex items-center gap-2">
-        <SearchIcon fontSize="small" /> Find Transactions
-      </h2>
-
       <Tabs
         value={mode}
         onChange={(_, newValue) => {
