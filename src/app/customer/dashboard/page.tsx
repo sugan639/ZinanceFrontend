@@ -152,6 +152,7 @@ export default function CustomerDashboard() {
         }
       } catch (err) {
         console.error('Dashboard fetch failed:', err);
+        window.location.href = '/login'; // Redirect to login on error
       } finally {
         setLoading(false);
       }
